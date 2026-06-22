@@ -1,11 +1,16 @@
 @extends('layouts.app')
 @section('title', 'Manajemen User')
 @section('content')
-<div class="flex h-screen overflow-hidden bg-bg-base">
+<div class="flex h-screen overflow-hidden bg-bg-base" x-data="{ sidebarOpen: false }">
 @include('admin._sidebar')
-<main class="flex-1 ml-sidebar-width h-full overflow-y-auto bg-surface-container-lowest p-margin-desktop max-w-container-max mx-auto space-y-6">
+<main class="flex-1 ml-0 md:ml-sidebar-width h-full overflow-y-auto bg-surface-container-lowest p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto space-y-6">
     <div class="flex items-center justify-between">
-        <h2 class="font-display-logo text-[24px] font-extrabold text-on-surface">Manajemen User</h2>
+        <div class="flex items-center gap-4">
+            <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 -ml-2 text-on-surface-variant hover:text-text-main hover:bg-surface-variant rounded-lg transition-colors">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <h2 class="font-display-logo text-[24px] font-extrabold text-on-surface">Manajemen User</h2>
+        </div>
         <div class="flex items-center gap-3">
             @if($trashedCount > 0)
             <span class="text-label-sm text-text-muted">{{ $trashedCount }} terhapus</span>
@@ -25,7 +30,8 @@
     @endif
 
     <div class="bg-surface border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-        <table class="w-full text-left">
+        <div class="overflow-x-auto">
+        <table class="w-full text-left min-w-[700px]">
             <thead><tr class="bg-surface-container-low border-b border-outline-variant">
                 <th class="px-6 py-4 font-label-sm text-label-sm text-text-muted uppercase">Nama</th>
                 <th class="px-6 py-4 font-label-sm text-label-sm text-text-muted uppercase">Email</th>
@@ -72,6 +78,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
     <div class="mt-4">{{ $users->links() }}</div>
 </main>

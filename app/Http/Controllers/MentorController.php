@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use App\Models\Message;
 use App\Models\Schedule;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\Withdrawal;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -51,6 +53,47 @@ class MentorController extends Controller
             'mentor', 'totalEarnings', 'activeStudents',
             'totalSessions', 'upcomingSchedules', 'recentBookings', 'ratingData'
         ));
+    }
+
+    public function chat()
+    {
+        $mentor = auth()->user()->mentor;
+
+        $students = User::whereIn('id', function ($q) use ($mentor) {
+            $q->select('sender_id')->from('messages')
+                ->where('receiver_id', auth()->id())
+                ->union(
+                    DB::table('messages')->select('receiver_id')
+                        ->where('sender_id', auth()->id())
+                );
+        })
+        ->where('role', 'student')
+        ->select('id', 'name')
+        ->get()
+        ->map(function ($student) {
+            $lastMsg = Message::where(function ($q) use ($student) {
+                $q->where('sender_id', auth()->id())->where('receiver_id', $student->id);
+            })->orWhere(function ($q) use ($student) {
+                $q->where('sender_id', $student->id)->where('receiver_id', auth()->id());
+            })->latest()->first();
+
+            $unread = Message::where('sender_id', $student->id)
+                ->where('receiver_id', auth()->id())
+                ->where('dibaca', false)
+                ->count();
+
+            return (object) [
+                'id' => $student->id,
+                'name' => $student->name,
+                'last_message' => $lastMsg?->isi,
+                'last_time' => $lastMsg?->created_at,
+                'unread' => $unread,
+            ];
+        })
+        ->sortByDesc(fn($s) => $s->last_time)
+        ->values();
+
+        return view('mentor.chat', compact('mentor', 'students'));
     }
 
     public function exportPdf()

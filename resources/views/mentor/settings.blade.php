@@ -3,7 +3,7 @@
 @section('title', 'Detail Mentor')
 
 @section('content')
-<div class="flex h-screen overflow-hidden bg-bg-base">
+<div class="flex h-screen overflow-hidden bg-bg-base" x-data="{ sidebarOpen: false }">
     @include('mentor._sidebar', ['active' => 'settings'])
 
     <main class="flex-1 ml-0 md:ml-sidebar-width h-full overflow-y-auto">
@@ -28,7 +28,12 @@
             @endif
 
             <div class="flex items-center justify-between">
-                <h1 class="font-display-logo text-2xl text-text-main font-extrabold">Detail Mentor</h1>
+                <div class="flex items-center gap-4">
+                    <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 -ml-2 text-on-surface-variant hover:text-text-main hover:bg-surface-variant rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <h1 class="font-display-logo text-2xl text-text-main font-extrabold">Detail Mentor</h1>
+                </div>
             </div>
 
             <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm p-6 max-w-xl">

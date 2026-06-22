@@ -1,6 +1,6 @@
-<div id="chat-box" class="fixed bottom-4 right-4 z-50 w-80 bg-surface rounded-2xl shadow-xl border border-outline-variant overflow-hidden hidden">
+<div id="chat-box" class="fixed bottom-0 right-0 z-50 w-full md:bottom-4 md:right-4 md:w-80 bg-surface rounded-none md:rounded-2xl shadow-xl border-t md:border border-outline-variant overflow-hidden hidden md:max-h-[calc(100vh-2rem)] max-h-[50vh]">
     <div class="bg-primary text-on-primary px-4 py-3 flex items-center justify-between">
-        <span class="font-label-bold text-label-bold">Chat dengan Mentor</span>
+        <span class="font-label-bold text-label-bold truncate">Chat</span>
         <button onclick="toggleChat()" class="text-on-primary/80 hover:text-on-primary"><span class="material-symbols-outlined text-[20px]">close</span></button>
     </div>
     <div id="chat-messages" class="h-72 overflow-y-auto p-3 space-y-2 bg-surface-container-lowest"></div>

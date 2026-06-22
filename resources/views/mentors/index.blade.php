@@ -9,8 +9,6 @@
             <a class="font-display-logo text-display-logo text-primary" href="{{ route('landing') }}">BimbelEdu</a>
             <nav class="hidden md:flex gap-6 items-center h-full">
                 <a class="text-primary border-b-2 border-primary pb-1 h-16 flex items-center mt-1 font-body-main text-body-main" href="{{ route('mentors.index') }}">Cari Mentor</a>
-                <a class="text-on-surface-variant h-16 flex items-center font-body-main text-body-main hover:text-primary transition-colors" href="#">Cara Kerja</a>
-                <a class="text-on-surface-variant h-16 flex items-center font-body-main text-body-main hover:text-primary transition-colors" href="#">Tentang</a>
             </nav>
         </div>
         <div class="flex items-center gap-4">

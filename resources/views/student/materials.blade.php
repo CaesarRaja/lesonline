@@ -3,8 +3,12 @@
 @section('title', 'Materi Saya')
 
 @section('content')
-<div class="flex h-screen overflow-hidden bg-bg-base">
-    <aside class="fixed left-0 h-full w-sidebar-width bg-surface-container border-r border-outline-variant flex flex-col p-4 z-20">
+<div class="flex h-screen overflow-hidden bg-bg-base" x-data="{ sidebarOpen: false }">
+
+    {{-- Mobile overlay --}}
+    <div x-show="sidebarOpen" x-cloak x-transition:enter="transition-opacity ease-linear duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="sidebarOpen = false" class="fixed inset-0 z-30 bg-black/40 md:hidden"></div>
+
+    <aside class="fixed left-0 h-full w-sidebar-width bg-surface-container border-r border-outline-variant flex flex-col p-4 z-40 transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0" :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
         <div class="mb-8 px-2 flex flex-col gap-1">
             <span class="font-display-logo text-display-logo text-primary">BimbelEdu</span>
             <span class="font-label-sm text-label-sm text-on-surface-variant">Student Portal</span>
@@ -44,9 +48,18 @@
         </div>
     </aside>
 
-    <main class="flex-1 ml-sidebar-width h-full overflow-y-auto">
-        <div class="p-margin-desktop max-w-container-max mx-auto space-y-6">
-            <h1 class="font-display-logo text-2xl text-text-main font-extrabold">Materi Pembelajaran</h1>
+    <main class="flex-1 ml-0 md:ml-sidebar-width h-full overflow-y-auto">
+        <div class="p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto space-y-6">
+
+            {{-- Mobile header with hamburger --}}
+            <div class="flex items-center gap-4 md:hidden mb-4">
+                <button @click="sidebarOpen = !sidebarOpen" class="p-2 -ml-2 text-on-surface-variant hover:text-text-main hover:bg-surface-variant rounded-lg transition-colors">
+                    <span class="material-symbols-outlined" x-show="!sidebarOpen">menu</span>
+                    <span class="material-symbols-outlined" x-show="sidebarOpen" x-cloak>close</span>
+                </button>
+                <h1 class="font-display-logo text-2xl text-text-main font-extrabold">Materi Pembelajaran</h1>
+            </div>
+            <h1 class="hidden md:block font-display-logo text-2xl text-text-main font-extrabold">Materi Pembelajaran</h1>
 
             @php
                 $groupedGeneral = $generalMaterials->groupBy(fn($m) => $m->mentor->user->name);

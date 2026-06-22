@@ -15,6 +15,11 @@
 <body class="font-body-main antialiased">
     @yield('content')
 
+    @auth
+    @include('chat.box')
+    @include('chat.fab')
+    @endauth
+
     @stack('scripts')
     @if (session('success'))
     <script>

@@ -3,7 +3,7 @@
 @section('title', 'Penarikan Saldo')
 
 @section('content')
-<div class="flex h-screen overflow-hidden bg-bg-base">
+<div class="flex h-screen overflow-hidden bg-bg-base" x-data="{ sidebarOpen: false }">
     @include('mentor._sidebar', ['active' => 'withdrawals'])
 
     <main class="flex-1 ml-0 md:ml-sidebar-width h-full overflow-y-auto">
@@ -15,7 +15,12 @@
             <div class="bg-error-container text-on-error-container font-label-bold text-label-bold px-4 py-3 rounded-xl border border-error/20">{{ session('error') }}</div>
             @endif
 
-            <h1 class="font-display-logo text-2xl text-text-main font-extrabold">Penarikan Saldo</h1>
+            <div class="flex items-center gap-4">
+                <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 -ml-2 text-on-surface-variant hover:text-text-main hover:bg-surface-variant rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <h1 class="font-display-logo text-2xl text-text-main font-extrabold">Penarikan Saldo</h1>
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
                 <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm p-5">

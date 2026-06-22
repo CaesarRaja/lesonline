@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+        Route::get('/chat', [StudentController::class, 'chat'])->name('chat');
         Route::post('/book/{schedule}', [StudentController::class, 'bookSchedule'])->name('book');
         Route::get('/payment/success', [StudentController::class, 'paymentSuccess'])->name('payment.success');
         Route::get('/payments', [StudentController::class, 'payments'])->name('payments');
@@ -43,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:mentor')->prefix('mentor')->name('mentor.')->group(function () {
         Route::get('/dashboard', [MentorController::class, 'dashboard'])->name('dashboard');
         Route::get('/schedules', [MentorController::class, 'schedules'])->name('schedules');
+        Route::get('/chat', [MentorController::class, 'chat'])->name('chat');
         Route::get('/withdrawals', [MentorController::class, 'withdrawals'])->name('withdrawals');
         Route::get('/export-pdf', [MentorController::class, 'exportPdf'])->name('export-pdf');
         Route::get('/materials', [MentorController::class, 'materials'])->name('materials');

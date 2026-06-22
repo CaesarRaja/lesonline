@@ -3,7 +3,7 @@
 @section('title', 'Jadwal Saya')
 
 @section('content')
-<div class="flex h-screen overflow-hidden bg-bg-base">
+<div class="flex h-screen overflow-hidden bg-bg-base" x-data="{ sidebarOpen: false }">
     @include('mentor._sidebar', ['active' => 'schedules'])
 
     <main class="flex-1 ml-0 md:ml-sidebar-width h-full overflow-y-auto">
@@ -16,7 +16,12 @@
             @endif
 
             <div class="flex items-center justify-between">
-                <h1 class="font-display-logo text-2xl text-text-main font-extrabold">Jadwal Saya</h1>
+                <div class="flex items-center gap-4">
+                    <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 -ml-2 text-on-surface-variant hover:text-text-main hover:bg-surface-variant rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <h1 class="font-display-logo text-2xl text-text-main font-extrabold">Jadwal Saya</h1>
+                </div>
                 <button onclick="openModal()" class="bg-primary text-on-primary font-label-bold text-label-bold px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2">
                     <span class="material-symbols-outlined" style="font-size: 18px;">add</span> Tambah Jadwal
                 </button>

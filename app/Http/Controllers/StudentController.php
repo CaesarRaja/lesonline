@@ -6,9 +6,12 @@ use App\Models\Coupon;
 use App\Models\Material;
 use App\Models\Mentor;
 use App\Models\MentorFavorite;
+use App\Models\Message;
 use App\Models\Schedule;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Midtrans\Snap;
 use Midtrans\Config;
@@ -302,4 +305,42 @@ class StudentController extends Controller
         return back()->with('success', 'Jadwal berhasil diubah!');
     }
 
+    public function chat()
+    {
+        $mentors = User::whereIn('id', function ($q) {
+            $q->select('sender_id')->from('messages')
+                ->where('receiver_id', auth()->id())
+                ->union(
+                    DB::table('messages')->select('receiver_id')
+                        ->where('sender_id', auth()->id())
+                );
+        })
+        ->where('role', 'mentor')
+        ->select('id', 'name')
+        ->get()
+        ->map(function ($mentor) {
+            $lastMsg = Message::where(function ($q) use ($mentor) {
+                $q->where('sender_id', auth()->id())->where('receiver_id', $mentor->id);
+            })->orWhere(function ($q) use ($mentor) {
+                $q->where('sender_id', $mentor->id)->where('receiver_id', auth()->id());
+            })->latest()->first();
+
+            $unread = Message::where('sender_id', $mentor->id)
+                ->where('receiver_id', auth()->id())
+                ->where('dibaca', false)
+                ->count();
+
+            return (object) [
+                'id' => $mentor->id,
+                'name' => $mentor->name,
+                'last_message' => $lastMsg?->isi,
+                'last_time' => $lastMsg?->created_at,
+                'unread' => $unread,
+            ];
+        })
+        ->sortByDesc(fn($m) => $m->last_time)
+        ->values();
+
+        return view('student.chat', compact('mentors'));
+    }
 }

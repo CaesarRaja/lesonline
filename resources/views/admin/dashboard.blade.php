@@ -3,15 +3,20 @@
 @section('title', 'Admin Dashboard')
 
 @section('content')
-<div class="flex h-screen overflow-hidden bg-bg-base">
+<div class="flex h-screen overflow-hidden bg-bg-base" x-data="{ sidebarOpen: false }">
     @include('admin._sidebar')
 
     <main class="flex-1 flex flex-col h-full overflow-y-auto bg-surface-container-lowest">
         <div class="flex-1 p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full space-y-8">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h2 class="font-display-logo text-[24px] leading-8 font-extrabold text-on-surface">Dashboard Admin</h2>
-                    <p class="text-text-muted mt-1 font-body-main text-body-main">Pantau aktivitas platform BimbelEdu.</p>
+                <div class="flex items-center gap-4">
+                    <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 -ml-2 text-on-surface-variant hover:text-text-main hover:bg-surface-variant rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <div>
+                        <h2 class="font-display-logo text-[24px] leading-8 font-extrabold text-on-surface">Dashboard Admin</h2>
+                        <p class="text-text-muted mt-1 font-body-main text-body-main">Pantau aktivitas platform BimbelEdu.</p>
+                    </div>
                 </div>
                 <a href="{{ route('admin.export-transactions-pdf') }}" class="flex items-center gap-2 px-4 py-2 border-2 border-primary text-primary font-label-bold text-label-bold rounded-lg hover:bg-primary-fixed transition-all"><span class="material-symbols-outlined">picture_as_pdf</span> Cetak Laporan PDF</a>
             </div>

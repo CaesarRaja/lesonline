@@ -37,14 +37,12 @@
                         <span class="font-label-bold text-label-bold text-text-main">{{ number_format($mentor->rating_rata_rata, 1) }}</span>
                     </div>
                 </div>
-                <div class="flex gap-2 mt-2">
-                    @auth
-                        @if(auth()->user()->isStudent())
+                    <div class="flex gap-2 mt-2">
+                        @auth
                         <button onclick="toggleChat({{ $mentor->user_id }}, '{{ $mentor->user->name }}')" class="flex items-center gap-1.5 px-3 py-1.5 bg-secondary-container text-on-secondary-container rounded-lg font-label-sm text-label-sm hover:bg-secondary-container/80 transition-colors">
                             <span class="material-symbols-outlined text-[16px]">chat</span>
                             Chat
                         </button>
-                        @endif
                         <form method="POST" action="{{ route('student.favorite.toggle', $mentor) }}" class="inline">
                             @csrf
                             <button class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant rounded-lg font-label-sm text-label-sm hover:bg-surface-variant transition-colors">
@@ -52,8 +50,8 @@
                                 {{ $isFavorited ? 'Favorit' : 'Simpan' }}
                             </button>
                         </form>
-                    @endauth
-                </div>
+                        @endauth
+                    </div>
                 <div class="text-right">
                     <p class="font-label-sm text-label-sm text-text-muted">Tarif per Jam</p>
                     <p class="font-price-display text-price-display text-primary">Rp {{ number_format($mentor->tarif_per_jam, 0, ',', '.') }}</p>
@@ -103,12 +101,5 @@
         </div>
     </div>
 </main>
-
-@auth
-@if(auth()->user()->isStudent())
-@include('chat.box')
-@endif
-@endauth
-
 
 @endsection
