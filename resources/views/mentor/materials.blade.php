@@ -4,48 +4,7 @@
 
 @section('content')
 <div class="flex h-screen overflow-hidden bg-bg-base">
-    <aside class="hidden md:flex bg-surface-container flex-col h-full p-4 fixed left-0 w-sidebar-width border-r border-outline-variant z-20">
-        <div class="mb-8 px-4 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary">
-                <span class="material-symbols-outlined" style="font-size: 20px;">menu_book</span>
-            </div>
-            <div>
-                <h1 class="font-display-logo text-display-logo text-primary">BimbelEdu</h1>
-                <p class="font-label-sm text-label-sm text-on-surface-variant">Mentor Portal</p>
-            </div>
-        </div>
-        <nav class="flex-1 space-y-1">
-            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.dashboard') }}">
-                <span class="material-symbols-outlined">dashboard</span> Dashboard
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.schedules') }}">
-                <span class="material-symbols-outlined">calendar_month</span> Jadwal
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.bundles') }}">
-                <span class="material-symbols-outlined">inventory_2</span> Paket Belajar
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg font-label-bold text-label-bold" href="#">
-                <span class="material-symbols-outlined fill-icon">cloud_upload</span> Upload Materi
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.withdrawals') }}">
-                <span class="material-symbols-outlined">account_balance</span> Penarikan Saldo
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.export-pdf') }}">
-                <span class="material-symbols-outlined">picture_as_pdf</span> Export Laporan
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('profile.edit') }}">
-                <span class="material-symbols-outlined">settings</span> Pengaturan
-            </a>
-        </nav>
-        <div class="pt-4 border-t border-outline-variant mt-auto">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-sm text-label-sm transition-colors w-full text-left">
-                    <span class="material-symbols-outlined" style="font-size: 18px;">logout</span> Keluar
-                </button>
-            </form>
-        </div>
-    </aside>
+    @include('mentor._sidebar', ['active' => 'materials'])
 
     <main class="flex-1 ml-0 md:ml-sidebar-width h-full overflow-y-auto">
         <div class="p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto space-y-gutter">
@@ -72,7 +31,7 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <a href="{{ asset('storage/' . $material->file_path) }}" class="text-primary hover:text-primary-container" download target="_blank">
+                            <a href="{{ route('mentor.materials.download', $material) }}" class="text-primary hover:text-primary-container">
                                 <span class="material-symbols-outlined">download</span>
                             </a>
                             <button onclick="toggleEdit({{ $material->id }})" class="text-on-surface-variant hover:text-primary">

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Coupon;
-use App\Models\Dispute;
 use App\Models\Material;
 use App\Models\Mentor;
 use App\Models\MentorFavorite;
 use App\Models\Schedule;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Midtrans\Snap;
 use Midtrans\Config;
 
@@ -25,6 +25,13 @@ class StudentController extends Controller
 
     public function dashboard()
     {
+        Transaction::where('status_pembayaran', 'pending')
+            ->where('created_at', '<=', now()->subMinutes(30))
+            ->each(function ($t) {
+                $t->schedule?->update(['status' => 'available']);
+                $t->delete();
+            });
+
         $user = auth()->user();
         $transactions = Transaction::with('mentor.user', 'schedule')
             ->where('student_id', $user->id)
@@ -146,11 +153,50 @@ class StudentController extends Controller
 
     public function payments()
     {
-        $transactions = Transaction::with('mentor.user', 'schedule', 'coupon', 'dispute')
+        Transaction::where('status_pembayaran', 'pending')
+            ->where('created_at', '<=', now()->subMinutes(30))
+            ->each(function ($t) {
+                $t->schedule?->update(['status' => 'available']);
+                $t->delete();
+            });
+
+        $transactions = Transaction::with('mentor.user', 'schedule', 'coupon')
             ->where('student_id', auth()->id())
             ->latest()
             ->paginate(10);
         return view('student.payments', compact('transactions'));
+    }
+
+    public function payPending(Transaction $transaction)
+    {
+        if ($transaction->student_id !== auth()->id()) abort(403);
+        if ($transaction->status_pembayaran !== 'pending') {
+            return back()->with('error', 'Transaksi ini sudah diproses.');
+        }
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $transaction->midtrans_order_id,
+                'gross_amount' => (int) $transaction->total_harga,
+            ],
+            'customer_details' => [
+                'first_name' => auth()->user()->name,
+                'email' => auth()->user()->email,
+            ],
+            'item_details' => [[
+                'id' => $transaction->mentor_id,
+                'price' => (int) $transaction->total_harga,
+                'quantity' => 1,
+                'name' => 'Sesi Belajar dengan ' . $transaction->mentor->user->name,
+            ]],
+        ];
+
+        try {
+            $snapToken = Snap::getSnapToken($params);
+            return view('student.payment', compact('snapToken', 'transaction'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memproses pembayaran: ' . $e->getMessage());
+        }
     }
 
     public function materials()
@@ -162,6 +208,25 @@ class StudentController extends Controller
             ->get();
         $generalMaterials = Material::whereNull('transaction_id')->with('mentor.user')->get();
         return view('student.materials', compact('transactions', 'generalMaterials'));
+    }
+
+    public function downloadMaterial(Material $material)
+    {
+        $hasAccess = Transaction::where('student_id', auth()->id())
+            ->where('status_pembayaran', 'success')
+            ->whereHas('materials', fn($q) => $q->where('id', $material->id))
+            ->exists();
+
+        if (!$hasAccess && $material->transaction_id !== null) {
+            abort(403);
+        }
+
+        if (!Storage::disk('public')->exists($material->file_path)) {
+            abort(404);
+        }
+
+        $filename = $material->judul . '.' . $material->tipe;
+        return Storage::disk('public')->download($material->file_path, $filename);
     }
 
     public function toggleFavorite(Mentor $mentor)
@@ -237,29 +302,4 @@ class StudentController extends Controller
         return back()->with('success', 'Jadwal berhasil diubah!');
     }
 
-    public function storeDispute(Request $request, Transaction $transaction)
-    {
-        if ($transaction->student_id !== auth()->id()) {
-            abort(403);
-        }
-        if ($transaction->status_pembayaran !== 'success') {
-            return back()->with('error', 'Hanya transaksi berhasil yang dapat di-dispute.');
-        }
-        if ($transaction->dispute) {
-            return back()->with('error', 'Sengketa sudah diajukan untuk transaksi ini.');
-        }
-
-        $validated = $request->validate([
-            'alasan' => 'required|string|max:1000',
-        ]);
-
-        Dispute::create([
-            'transaction_id' => $transaction->id,
-            'student_id' => auth()->id(),
-            'alasan' => $validated['alasan'],
-            'status' => 'open',
-        ]);
-
-        return back()->with('success', 'Sengketa berhasil diajukan!');
-    }
 }

@@ -58,10 +58,6 @@ Penambahan fitur ini dirancang agar tetap selaras dengan arsitektur teknologi ya
 
 
 
-* **Manajemen Paket Belajar (Course Bundling):**
-* **Deskripsi:** Selain menetapkan tarif statis per jam, Mentor dapat membuat paket belajar terbundel (contoh: Paket 5 Sesi Belajar Python Dasar) dengan harga khusus.
-
-
 
 
 * **Kalender Pengecualian Dinamis (Exception Calendar):**

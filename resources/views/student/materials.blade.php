@@ -26,10 +26,6 @@
                 <span class="material-symbols-outlined">search</span>
                 Cari Mentor
             </a>
-            <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('profile.edit') }}">
-                <span class="material-symbols-outlined">settings</span>
-                Pengaturan
-            </a>
         </nav>
         <div class="mt-auto mb-6 px-2">
             <a href="{{ route('mentors.index') }}" class="w-full py-2 bg-primary text-on-primary rounded-lg font-label-bold text-label-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
@@ -68,7 +64,7 @@
                                 <p class="font-label-bold text-label-bold text-text-main truncate">{{ $material->judul }}</p>
                                 <p class="font-label-sm text-label-sm text-text-muted">{{ strtoupper($material->tipe) }}</p>
                             </div>
-                            <a href="{{ asset('storage/' . $material->file_path) }}" class="text-primary hover:text-primary-container" download>
+                            <a href="{{ route('student.materials.download', $material) }}" class="text-primary hover:text-primary-container">
                                 <span class="material-symbols-outlined">download</span>
                             </a>
                         </div>
@@ -89,7 +85,7 @@
                             <p class="font-label-bold text-label-bold text-text-main truncate">{{ $material->judul }}</p>
                             <p class="font-label-sm text-label-sm text-text-muted">{{ strtoupper($material->tipe) }}</p>
                         </div>
-                        <a href="{{ asset('storage/' . $material->file_path) }}" class="text-primary hover:text-primary-container" download>
+                        <a href="{{ route('student.materials.download', $material) }}" class="text-primary hover:text-primary-container">
                             <span class="material-symbols-outlined">download</span>
                         </a>
                     </div>

@@ -51,9 +51,4 @@ class Transaction extends Model
     {
         return $this->hasMany(Material::class);
     }
-
-    public function dispute()
-    {
-        return $this->hasOne(Dispute::class);
-    }
 }

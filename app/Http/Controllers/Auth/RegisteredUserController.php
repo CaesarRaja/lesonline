@@ -42,6 +42,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
+            'verification_status' => $request->role === 'mentor' ? 'pending' : 'verified',
         ]);
 
         if ($request->role === 'mentor') {

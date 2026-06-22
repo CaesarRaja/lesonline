@@ -16,7 +16,7 @@
                 <a href="{{ route('admin.export-transactions-pdf') }}" class="flex items-center gap-2 px-4 py-2 border-2 border-primary text-primary font-label-bold text-label-bold rounded-lg hover:bg-primary-fixed transition-all"><span class="material-symbols-outlined">picture_as_pdf</span> Cetak Laporan PDF</a>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-gutter">
                 <div class="bg-surface border border-outline-variant rounded-xl p-5 shadow-sm">
                     <p class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider mb-1">Total User</p>
                     <h3 class="font-price-display text-price-display text-on-surface text-2xl">{{ number_format($totalUsers) }}</h3>
@@ -27,13 +27,18 @@
                     <h3 class="font-price-display text-price-display text-on-surface text-2xl">{{ number_format($totalTransactions) }}</h3>
                 </div>
                 <div class="bg-surface border border-outline-variant rounded-xl p-5 shadow-sm">
-                    <p class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider mb-1">Pendapatan</p>
+                    <p class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider mb-1">Total Pendapatan</p>
                     <h3 class="font-price-display text-price-display text-on-surface text-2xl">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</h3>
                 </div>
                 <div class="bg-surface border border-outline-variant rounded-xl p-5 shadow-sm">
+                    <p class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider mb-1">Komisi Platform</p>
+                    <h3 class="font-price-display text-price-display text-on-surface text-2xl">Rp {{ number_format($totalKomisi, 0, ',', '.') }}</h3>
+                    <p class="font-label-sm text-label-sm text-text-muted mt-1">{{ $totalRevenue > 0 ? number_format($totalKomisi / $totalRevenue * 100, 1) : '0' }}% dari pendapatan</p>
+                </div>
+                <div class="bg-surface border border-outline-variant rounded-xl p-5 shadow-sm">
                     <p class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider mb-1">Menunggu</p>
-                    <h3 class="font-price-display text-price-display text-on-surface text-2xl">{{ $pendingVerifications + $pendingWithdrawals + $openDisputes }}</h3>
-                    <p class="font-label-sm text-label-sm text-text-muted mt-1">{{ $pendingVerifications }} verifikasi / {{ $pendingWithdrawals }} penarikan / {{ $openDisputes }} sengketa</p>
+                    <h3 class="font-price-display text-price-display text-on-surface text-2xl">{{ $pendingVerifications + $pendingWithdrawals }}</h3>
+                    <p class="font-label-sm text-label-sm text-text-muted mt-1">{{ $pendingVerifications }} verifikasi / {{ $pendingWithdrawals }} penarikan</p>
                 </div>
             </div>
 

@@ -30,10 +30,6 @@
                 <span class="material-symbols-outlined">favorite</span>
                 Favorit ({{ $favorites->count() }})
             </a>
-            <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('profile.edit') }}">
-                <span class="material-symbols-outlined">settings</span>
-                Pengaturan
-            </a>
         </nav>
         <div class="mt-auto mb-6 px-2">
             <a href="{{ route('mentors.index') }}" class="w-full py-2 bg-primary text-on-primary rounded-lg font-label-bold text-label-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
@@ -41,14 +37,21 @@
                 Pesan Sesi Baru
             </a>
         </div>
-        <div class="border-t border-outline-variant pt-4 flex flex-col gap-2">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors w-full text-left" type="submit">
-                    <span class="material-symbols-outlined">logout</span>
-                    Keluar
-                </button>
-            </form>
+        <div class="pt-4 border-t border-outline-variant flex flex-col-reverse" x-data="{ open: false }" @click.outside="open = false">
+            <button @click="open = ! open" class="flex items-center gap-3 px-2 py-2 w-full rounded-lg hover:bg-surface-variant transition-colors text-left">
+                <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-label-bold flex-shrink-0">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+                <span class="font-label-bold text-label-bold text-text-main truncate flex-1">{{ auth()->user()->name }}</span>
+            </button>
+            <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="mb-2 bg-surface-container-lowest rounded-lg border border-outline-variant shadow-xl overflow-hidden" style="display: none;" @click="open = false">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant font-label-bold text-label-bold transition-colors w-full text-left">
+                        <span class="material-symbols-outlined">logout</span> Keluar
+                    </button>
+                </form>
+            </div>
         </div>
     </aside>
 
@@ -57,9 +60,6 @@
             <div>
                 <h1 class="font-headline-card text-headline-card text-text-main">Selamat Datang, {{ auth()->user()->name }}</h1>
                 <p class="font-label-sm text-label-sm text-text-muted">Siap untuk belajar hari ini?</p>
-            </div>
-            <div class="w-10 h-10 rounded-full border-2 border-primary-fixed overflow-hidden bg-primary-fixed flex items-center justify-center text-primary font-label-bold">
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
             </div>
         </header>
 
@@ -184,15 +184,6 @@
                                         </select>
                                         <button class="text-xs text-primary hover:underline whitespace-nowrap" type="submit">Reschedule</button>
                                     </form>
-                                    @endif
-                                    @if(!$transaction->dispute)
-                                    <form method="POST" action="{{ route('student.dispute.store', $transaction) }}" class="flex gap-1">
-                                        @csrf
-                                        <input name="alasan" placeholder="Alasan sengketa..." class="border border-outline-variant rounded px-2 py-1 text-xs flex-1" required>
-                                        <button class="text-xs text-secondary hover:underline whitespace-nowrap" type="submit">Sengketa</button>
-                                    </form>
-                                    @else
-                                    <span class="text-xs text-pending-text">Sengketa diajukan ({{ $transaction->dispute->status }})</span>
                                     @endif
                                 </div>
                                 @endif

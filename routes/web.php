@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\MentorController;
+use App\Http\Controllers\MentorSettingsController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicController;
@@ -24,12 +25,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/payment/success', [StudentController::class, 'paymentSuccess'])->name('payment.success');
         Route::get('/payments', [StudentController::class, 'payments'])->name('payments');
         Route::get('/materials', [StudentController::class, 'materials'])->name('materials');
+        Route::get('/materials/{material}/download', [StudentController::class, 'downloadMaterial'])->name('materials.download');
         Route::post('/favorite/{mentor}', [StudentController::class, 'toggleFavorite'])->name('favorite.toggle');
         Route::post('/coupon/apply', [StudentController::class, 'applyCoupon'])->name('coupon.apply');
         Route::post('/cancel/{transaction}', [StudentController::class, 'requestCancel'])->name('cancel');
         Route::post('/review/{transaction}', [StudentController::class, 'storeReview'])->name('review.store');
         Route::put('/reschedule/{transaction}', [StudentController::class, 'rescheduleSchedule'])->name('reschedule');
-        Route::post('/dispute/{transaction}', [StudentController::class, 'storeDispute'])->name('dispute.store');
+        Route::post('/pay/{transaction}', [StudentController::class, 'payPending'])->name('pay');
     });
 
     Route::middleware(['auth', 'verified'])->prefix('chat')->name('chat.')->group(function () {
@@ -41,19 +43,19 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:mentor')->prefix('mentor')->name('mentor.')->group(function () {
         Route::get('/dashboard', [MentorController::class, 'dashboard'])->name('dashboard');
         Route::get('/schedules', [MentorController::class, 'schedules'])->name('schedules');
-        Route::get('/bundles', [MentorController::class, 'bundles'])->name('bundles');
         Route::get('/withdrawals', [MentorController::class, 'withdrawals'])->name('withdrawals');
         Route::get('/export-pdf', [MentorController::class, 'exportPdf'])->name('export-pdf');
         Route::get('/materials', [MentorController::class, 'materials'])->name('materials');
+        Route::get('/materials/{material}/download', [MentorController::class, 'downloadMaterial'])->name('materials.download');
         Route::put('/materials/{material}', [MentorController::class, 'updateMaterial'])->name('materials.update');
         Route::delete('/materials/{material}', [MentorController::class, 'deleteMaterial'])->name('materials.destroy');
         Route::post('/withdrawal', [MentorController::class, 'requestWithdrawal'])->name('withdrawal');
+        Route::get('/settings', [MentorSettingsController::class, 'edit'])->name('settings');
+        Route::put('/settings', [MentorSettingsController::class, 'update'])->name('settings.update');
 
         Route::middleware('mentor.verified')->group(function () {
             Route::post('/schedule', [MentorController::class, 'updateSchedule'])->name('schedule.store');
             Route::post('/schedule/{schedule}/toggle', [MentorController::class, 'toggleException'])->name('schedule.toggle');
-            Route::post('/bundles', [MentorController::class, 'storeBundle'])->name('bundles.store');
-            Route::delete('/bundles/{bundle}', [MentorController::class, 'deleteBundle'])->name('bundles.destroy');
             Route::post('/materials/upload', [MentorController::class, 'uploadMaterial'])->name('materials.upload');
         });
     });
@@ -70,12 +72,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/fees', [AdminController::class, 'updateFees'])->name('fees.update');
         Route::get('/withdrawals', [AdminController::class, 'withdrawals'])->name('withdrawals');
         Route::post('/withdrawals/{withdrawal}', [AdminController::class, 'resolveWithdrawal'])->name('withdrawals.resolve');
-        Route::get('/disputes', [AdminController::class, 'disputes'])->name('disputes');
-        Route::post('/disputes/{dispute}', [AdminController::class, 'resolveDispute'])->name('disputes.resolve');
         Route::get('/reviews', [AdminController::class, 'reviews'])->name('reviews');
         Route::delete('/reviews/{review}', [AdminController::class, 'deleteReview'])->name('reviews.destroy');
         Route::get('/export-transactions-pdf', [AdminController::class, 'exportTransactionsPdf'])->name('export-transactions-pdf');
-        Route::get('/test-midtrans', [AdminController::class, 'testMidtrans'])->name('test-midtrans');
     });
 });
 

@@ -25,11 +25,6 @@ class Mentor extends Model
         return $this->hasMany(Transaction::class);
     }
 
-    public function bundles()
-    {
-        return $this->hasMany(CourseBundle::class);
-    }
-
     public function materials()
     {
         return $this->hasMany(Material::class);

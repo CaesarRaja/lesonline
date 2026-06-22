@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 
-use App\Models\Dispute;
 use App\Models\PlatformFee;
 use App\Models\Review;
 use App\Models\Transaction;
@@ -11,9 +10,9 @@ use App\Models\User;
 use App\Models\Withdrawal;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Midtrans\Config;
-use Midtrans\Snap;
-use Midtrans\Transaction as MidtransTransaction;
+
 
 class AdminController extends Controller
 {
@@ -25,8 +24,10 @@ class AdminController extends Controller
         $pendingVerifications = User::where('role', 'mentor')->where('verification_status', 'pending')->count();
         $totalTransactions = Transaction::where('status_pembayaran', 'success')->count();
         $totalRevenue = Transaction::where('status_pembayaran', 'success')->sum('total_harga');
+        $totalKomisi = Transaction::where('status_pembayaran', 'success')
+            ->whereNotNull('jumlah_dibayar')
+            ->sum(DB::raw('total_harga - jumlah_dibayar'));
         $pendingWithdrawals = Withdrawal::where('status', 'pending')->count();
-        $openDisputes = Dispute::where('status', 'open')->count();
         $recentTransactions = Transaction::with('student', 'mentor.user', 'schedule')
             ->latest()
             ->take(5)
@@ -34,7 +35,7 @@ class AdminController extends Controller
 
         return view('admin.dashboard', compact(
             'totalUsers', 'totalStudents', 'totalMentors', 'pendingVerifications',
-            'totalTransactions', 'totalRevenue', 'pendingWithdrawals', 'openDisputes',
+            'totalTransactions', 'totalRevenue', 'totalKomisi', 'pendingWithdrawals',
             'recentTransactions'
         ));
     }
@@ -202,42 +203,6 @@ class AdminController extends Controller
         Config::$is3ds = true;
     }
 
-    // Disputes
-    public function disputes()
-    {
-        $disputes = Dispute::with('transaction.mentor.user', 'student', 'resolver')->latest()->get();
-        return view('admin.disputes', compact('disputes'));
-    }
-
-    public function resolveDispute(Request $request, Dispute $dispute)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:resolved,rejected',
-            'catatan_resolusi' => 'nullable|string|max:1000',
-        ]);
-
-        $dispute->update([
-            'status' => $validated['status'],
-            'catatan_resolusi' => $validated['catatan_resolusi'],
-            'resolved_by' => auth()->id(),
-        ]);
-
-        if ($validated['status'] === 'resolved') {
-            $transaction = $dispute->transaction;
-            $transaction->update(['refund_status' => 'refunded']);
-
-            if ($transaction->midtrans_transaction_id) {
-                try {
-                    MidtransTransaction::refund($transaction->midtrans_order_id);
-                } catch (\Exception $e) {
-                    \Log::warning('Midtrans refund failed for ' . $transaction->midtrans_order_id . ': ' . $e->getMessage());
-                }
-            }
-        }
-
-        return back()->with('success', 'Sengketa berhasil diresolusi.');
-    }
-
     // Reviews Moderation
     public function reviews()
     {
@@ -270,43 +235,4 @@ class AdminController extends Controller
         return $pdf->download('laporan-keuangan-platform.pdf');
     }
 
-    public function testMidtrans()
-    {
-        $serverKey = config('services.midtrans.server_key');
-        $clientKey = config('services.midtrans.client_key');
-        $isProduction = config('services.midtrans.is_production');
-        $mode = $isProduction ? 'PRODUCTION' : 'SANDBOX';
-
-        $errors = [];
-        $snapToken = null;
-
-        if (!$serverKey) {
-            $errors[] = 'MIDTRANS_SERVER_KEY tidak terisi di .env';
-        }
-        if (!$clientKey) {
-            $errors[] = 'MIDTRANS_CLIENT_KEY tidak terisi di .env';
-        }
-
-        if ($serverKey && $clientKey) {
-            try {
-                $snapToken = Snap::getSnapToken([
-                    'transaction_details' => [
-                        'order_id' => 'TEST-' . time(),
-                        'gross_amount' => 10000,
-                    ],
-                    'customer_details' => [
-                        'first_name' => 'Test',
-                        'email' => 'test@test.com',
-                    ],
-                ]);
-            } catch (\Exception $e) {
-                $errors[] = 'Midtrans API Error: ' . $e->getMessage();
-            }
-        }
-
-        return view('admin.test-midtrans', compact(
-            'serverKey', 'clientKey', 'isProduction', 'mode',
-            'errors', 'snapToken'
-        ));
-    }
 }

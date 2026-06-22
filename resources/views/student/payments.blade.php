@@ -24,10 +24,6 @@
                 <span class="material-symbols-outlined">search</span>
                 Cari Mentor
             </a>
-            <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('profile.edit') }}">
-                <span class="material-symbols-outlined">settings</span>
-                Pengaturan
-            </a>
         </nav>
         <div class="mt-auto mb-6 px-2">
             <a href="{{ route('mentors.index') }}" class="w-full py-2 bg-primary text-on-primary rounded-lg font-label-bold text-label-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
@@ -83,7 +79,13 @@
                                 @if($t->status_pembayaran === 'success')
                                 <span class="px-2.5 py-1 rounded-md text-[12px] font-semibold bg-success-bg text-success-text">Lunas</span>
                                 @elseif($t->status_pembayaran === 'pending')
-                                <span class="px-2.5 py-1 rounded-md text-[12px] font-semibold bg-pending-bg text-pending-text">Pending</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-1 rounded-md text-[12px] font-semibold bg-pending-bg text-pending-text">Pending</span>
+                                    <form method="POST" action="{{ route('student.pay', $t) }}" class="inline">
+                                        @csrf
+                                        <button class="px-2.5 py-1 rounded-md text-[12px] font-semibold bg-primary text-on-primary hover:bg-primary/90 transition-colors">Bayar</button>
+                                    </form>
+                                </div>
                                 @elseif($t->refund_status === 'refunded')
                                 <span class="px-2.5 py-1 rounded-md text-[12px] font-semibold bg-error-container text-on-error-container">Refund</span>
                                 @elseif($t->status_pembayaran === 'failed')
@@ -157,10 +159,6 @@
                 <span class="text-text-muted">Refund Status</span>
                 <span id="d-refund" class="font-label-bold text-label-bold text-on-surface text-right"></span>
             </div>
-            <div class="flex justify-between py-2 border-b border-outline-variant/30">
-                <span class="text-text-muted">Sengketa</span>
-                <span id="d-dispute" class="font-label-bold text-label-bold text-right"></span>
-            </div>
             @if(config('app.debug'))
             <div class="pt-2">
                 <p class="font-label-sm text-label-sm text-text-muted mb-1">Midtrans Response (debug):</p>
@@ -197,15 +195,6 @@ function openDetail(id) {
     else { statusEl.textContent = t.status_pembayaran; statusEl.className = 'font-label-bold text-label-bold text-right text-text-muted'; }
 
     document.getElementById('d-refund').textContent = t.refund_status || '—';
-
-    const disputeEl = document.getElementById('d-dispute');
-    if (t.dispute) {
-        disputeEl.textContent = t.dispute.status === 'resolved' ? 'Selesai' : 'Open';
-        disputeEl.className = 'font-label-bold text-label-bold text-right ' + (t.dispute.status === 'resolved' ? 'text-success-text' : 'text-pending-text');
-    } else {
-        disputeEl.textContent = '—';
-        disputeEl.className = 'font-label-bold text-label-bold text-right text-text-muted';
-    }
 
     const respEl = document.getElementById('d-response');
     if (respEl) respEl.textContent = t.midtrans_response ? JSON.stringify(t.midtrans_response, null, 2) : '—';

@@ -31,11 +31,6 @@ class User extends Authenticatable
         return $this->hasMany(MentorFavorite::class, 'student_id');
     }
 
-    public function disputes()
-    {
-        return $this->hasMany(Dispute::class, 'student_id');
-    }
-
     public function isStudent()
     {
         return $this->role === 'student';

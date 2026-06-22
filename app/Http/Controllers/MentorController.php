@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CourseBundle;
 use App\Models\Material;
 use App\Models\Schedule;
 use App\Models\Transaction;
@@ -17,7 +16,7 @@ class MentorController extends Controller
     public function dashboard()
     {
         $mentor = auth()->user()->mentor;
-        $mentor->load('schedules', 'transactions.student', 'transactions.schedule', 'bundles', 'withdrawals');
+        $mentor->load('schedules', 'transactions.student', 'transactions.schedule', 'withdrawals');
 
         $totalEarnings = $mentor->transactions()
             ->where('status_pembayaran', 'success')
@@ -78,13 +77,6 @@ class MentorController extends Controller
         return view('mentor.schedules', compact('mentor', 'allSchedules', 'upcomingSchedules'));
     }
 
-    public function bundles()
-    {
-        $mentor = auth()->user()->mentor;
-        $mentor->load('bundles');
-        return view('mentor.bundles', compact('mentor'));
-    }
-
     public function withdrawals()
     {
         $mentor = auth()->user()->mentor;
@@ -135,27 +127,6 @@ class MentorController extends Controller
         return back()->with('success', 'Status jadwal diubah.');
     }
 
-    // Course Bundles
-    public function storeBundle(Request $request)
-    {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'jumlah_sesi' => 'required|integer|min:1',
-            'harga' => 'required|numeric|min:0',
-        ]);
-
-        auth()->user()->mentor->bundles()->create($validated);
-        return back()->with('success', 'Paket belajar berhasil dibuat!');
-    }
-
-    public function deleteBundle(CourseBundle $bundle)
-    {
-        if ($bundle->mentor_id !== auth()->user()->mentor->id) abort(403);
-        $bundle->delete();
-        return back()->with('success', 'Paket belajar dihapus.');
-    }
-
     // Material Upload
     public function uploadMaterial(Request $request)
     {
@@ -188,6 +159,20 @@ class MentorController extends Controller
             ->with('student')
             ->get();
         return view('mentor.materials', compact('materials', 'transactions'));
+    }
+
+    public function downloadMaterial(Material $material)
+    {
+        if ($material->mentor_id !== auth()->user()->mentor->id) {
+            abort(403);
+        }
+
+        if (!Storage::disk('public')->exists($material->file_path)) {
+            abort(404);
+        }
+
+        $filename = $material->judul . '.' . $material->tipe;
+        return Storage::disk('public')->download($material->file_path, $filename);
     }
 
     public function updateMaterial(Request $request, Material $material)
