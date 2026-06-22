@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\BroadcastSent;
-use App\Models\Broadcast;
+
 use App\Models\Dispute;
 use App\Models\PlatformFee;
 use App\Models\Review;
@@ -250,26 +249,6 @@ class AdminController extends Controller
     {
         $review->delete();
         return back()->with('success', 'Ulasan berhasil dihapus.');
-    }
-
-    // Broadcast
-    public function broadcasts()
-    {
-        $broadcasts = Broadcast::latest()->get();
-        return view('admin.broadcasts', compact('broadcasts'));
-    }
-
-    public function sendBroadcast(Request $request)
-    {
-        $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'isi' => 'required|string',
-            'target_role' => 'required|in:student,mentor,all',
-        ]);
-
-        $broadcast = Broadcast::create($validated);
-        broadcast(new BroadcastSent($broadcast));
-        return back()->with('success', 'Pengumuman berhasil dikirim!');
     }
 
     public function exportTransactionsPdf(Request $request)

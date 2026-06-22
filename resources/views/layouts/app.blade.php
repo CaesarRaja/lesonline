@@ -49,20 +49,7 @@
         auth: { headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } },
     });
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const broadcastChannel = window.reverbPusher.subscribe('broadcasts');
-        broadcastChannel.bind('BroadcastSent', function (e) {
-            const target = e.broadcast.target_role;
-            const userRole = '{{ auth()->check() ? auth()->user()->role : "" }}';
-            if (target === 'all' || target === userRole) {
-                const container = document.createElement('div');
-                container.className = 'fixed top-4 right-4 z-[100] bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xl p-5 max-w-sm';
-                container.innerHTML = '<div class="flex items-start gap-3"><div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0"><span class="material-symbols-outlined">campaign</span></div><div class="flex-1"><h4 class="font-label-bold text-label-bold text-on-surface">' + e.broadcast.judul + '</h4><p class="font-body-main text-body-main text-text-muted mt-1">' + e.broadcast.isi + '</p></div><button onclick="this.parentElement.parentElement.remove()" class="text-text-muted hover:text-on-surface"><span class="material-symbols-outlined text-[18px]">close</span></button></div>';
-                document.body.appendChild(container);
-                setTimeout(() => container.remove(), 10000);
-            }
-        });
-    });
+
 </script>
 </body>
 </html>

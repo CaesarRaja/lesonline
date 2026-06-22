@@ -18,8 +18,17 @@
             <a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg font-label-bold text-label-bold" href="#">
                 <span class="material-symbols-outlined fill-icon">dashboard</span> Dashboard
             </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.schedules') }}">
+                <span class="material-symbols-outlined">calendar_month</span> Jadwal
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.bundles') }}">
+                <span class="material-symbols-outlined">inventory_2</span> Paket Belajar
+            </a>
             <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.materials') }}">
                 <span class="material-symbols-outlined">cloud_upload</span> Upload Materi
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.withdrawals') }}">
+                <span class="material-symbols-outlined">account_balance</span> Penarikan Saldo
             </a>
             <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.export-pdf') }}">
                 <span class="material-symbols-outlined">picture_as_pdf</span> Export Laporan
@@ -77,87 +86,6 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-gutter">
-                <div class="space-y-4">
-                    <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm p-5">
-                        <h3 class="font-headline-card text-headline-card text-on-surface mb-4">Tambah Jadwal Baru</h3>
-                        <form method="POST" action="{{ route('mentor.schedule.store') }}" class="flex flex-col sm:flex-row gap-4">
-                            @csrf
-                            <div class="flex-1">
-                                <label class="font-label-sm text-label-sm text-text-muted block mb-1">Mulai</label>
-                                <input type="datetime-local" name="waktu_mulai" class="w-full border border-outline-variant rounded-lg px-3 py-2 font-body-main" required>
-                            </div>
-                            <div class="flex-1">
-                                <label class="font-label-sm text-label-sm text-text-muted block mb-1">Selesai</label>
-                                <input type="datetime-local" name="waktu_selesai" class="w-full border border-outline-variant rounded-lg px-3 py-2 font-body-main" required>
-                            </div>
-                            <button class="bg-primary text-on-primary font-label-bold text-label-bold px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm self-end" type="submit">Tambah</button>
-                        </form>
-                    </div>
-
-                    <h3 class="font-headline-card text-headline-card text-on-surface">Paket Belajar</h3>
-                    <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm p-5">
-                        <form method="POST" action="{{ route('mentor.bundles.store') }}" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 pb-4 border-b border-outline-variant">
-                            @csrf
-                            <input name="nama" placeholder="Nama Paket" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main" required>
-                            <input name="deskripsi" placeholder="Deskripsi (opsional)" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main">
-                            <input name="jumlah_sesi" type="number" min="1" placeholder="Jumlah Sesi" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main" required>
-                            <input name="harga" type="number" min="0" placeholder="Harga Paket" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main" required>
-                            <button class="sm:col-span-2 bg-primary text-on-primary font-label-bold text-label-bold py-2 rounded-lg hover:bg-primary/90 transition-colors" type="submit">Buat Paket</button>
-                        </form>
-                        @forelse($mentor->bundles as $bundle)
-                        <div class="flex items-center justify-between py-2 border-b border-outline-variant/30 last:border-0">
-                            <div>
-                                <p class="font-label-bold text-label-bold text-text-main">{{ $bundle->nama }}</p>
-                                <p class="font-label-sm text-label-sm text-text-muted">{{ $bundle->jumlah_sesi }} sesi - Rp {{ number_format($bundle->harga, 0, ',', '.') }}</p>
-                            </div>
-                            <form method="POST" action="{{ route('mentor.bundles.destroy', $bundle) }}">
-                                @csrf @method('DELETE')
-                                <button class="text-error hover:text-error/80"><span class="material-symbols-outlined">delete</span></button>
-                            </form>
-                        </div>
-                        @empty
-                        <p class="font-body-main text-body-main text-text-muted text-center">Belum ada paket belajar.</p>
-                        @endforelse
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="font-headline-card text-headline-card text-on-surface">Penarikan Saldo</h3>
-                    <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm p-5">
-                        @php
-                            $totalWithdrawn = $mentor->withdrawals->where('status', 'approved')->sum('jumlah');
-                            $saldo = $totalEarnings - $totalWithdrawn;
-                        @endphp
-                        <p class="font-label-sm text-label-sm text-text-muted">Saldo Tersedia</p>
-                        <p class="font-price-display text-price-display text-on-surface mb-4">Rp {{ number_format($saldo, 0, ',', '.') }}</p>
-                        <form method="POST" action="{{ route('mentor.withdrawal') }}" class="space-y-3">
-                            @csrf
-                            <div class="grid grid-cols-2 gap-3">
-                                <input name="jumlah" type="number" min="50000" placeholder="Jumlah" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main" required>
-                                <input name="bank" placeholder="Nama Bank" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main" required>
-                                <input name="no_rekening" placeholder="No. Rekening" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main" required>
-                                <input name="atas_nama" placeholder="Atas Nama" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main" required>
-                            </div>
-                            <button class="w-full bg-secondary-container text-on-secondary-container font-label-bold text-label-bold py-2 rounded-lg hover:bg-secondary-container/90 transition-colors" type="submit">Ajukan Penarikan</button>
-                        </form>
-                        @if($mentor->withdrawals->isNotEmpty())
-                        <div class="mt-4 pt-4 border-t border-outline-variant">
-                            <h4 class="font-label-bold text-label-bold text-text-main mb-2">Riwayat Penarikan</h4>
-                            @foreach($mentor->withdrawals->take(5) as $w)
-                            <div class="flex justify-between items-center py-1">
-                                <span class="font-label-sm text-label-sm text-text-muted">Rp {{ number_format($w->jumlah, 0, ',', '.') }} - {{ $w->bank }}</span>
-                                <span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full
-                                    @if($w->status === 'approved') bg-success-bg text-success-text
-                                    @elseif($w->status === 'rejected') bg-error-container text-on-error-container
-                                    @else bg-pending-bg text-pending-text @endif">
-                                    {{ $w->status }}
-                                </span>
-                            </div>
-                            @endforeach
-                        </div>
-                        @endif
-                    </div>
 
                     <h3 class="font-headline-card text-headline-card text-on-surface">Jadwal Mendatang</h3>
                     <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm overflow-hidden divide-y divide-surface-variant">
@@ -196,8 +124,6 @@
                         @endforeach
                     </div>
                     @endif
-                </div>
-            </div>
 
             <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm p-5">
                 <h3 class="font-headline-card text-headline-card text-on-surface mb-4">Pesanan Terbaru</h3>
@@ -216,7 +142,7 @@
                             <tr class="border-b border-outline-variant/30">
                                 <td class="px-4 py-3 font-label-bold text-label-bold text-text-main">{{ $booking->student->name }}</td>
                                 <td class="px-4 py-3 font-body-main text-body-main text-text-muted">{{ $booking->schedule?->waktu_mulai?->format('d M H:i') ?? '-' }}</td>
-                                <td class="px-4 py-3 font-label-bold text-label-bold text-text-main">Rp {{ number_format($booking->total_harga, 0, ',', '.') }}</td>
+                                <td class="px-4 py-3 font-label-bold text-label-bold text-text-main">Rp {{ number_format($booking->jumlah_dibayar ?? $booking->total_harga, 0, ',', '.') }}</td>
                                 <td class="px-4 py-3">
                                     @if($booking->status_pembayaran === 'success')
                                     <span class="px-2 py-1 bg-success-bg text-success-text rounded-md font-label-sm text-label-sm">Success</span>

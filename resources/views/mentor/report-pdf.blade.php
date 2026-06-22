@@ -35,14 +35,14 @@
                 <td>{{ $t->created_at->format('d M Y') }}</td>
                 <td>{{ $t->student->name }}</td>
                 <td>{{ $t->schedule ? $t->schedule->waktu_mulai->format('l, H:i') : '-' }}</td>
-                <td>Rp {{ number_format($t->total_harga, 0, ',', '.') }}</td>
+                <td>Rp {{ number_format($t->jumlah_dibayar ?? $t->total_harga, 0, ',', '.') }}</td>
                 <td>{{ $t->status_pembayaran }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
     <div class="total">
-        Total Pendapatan: Rp {{ number_format($transactions->sum('total_harga'), 0, ',', '.') }}
+        Total Pendapatan: Rp {{ number_format($transactions->sum(fn($t) => $t->jumlah_dibayar ?? $t->total_harga), 0, ',', '.') }}
     </div>
 </body>
 </html>

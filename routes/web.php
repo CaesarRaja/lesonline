@@ -40,14 +40,22 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:mentor')->prefix('mentor')->name('mentor.')->group(function () {
         Route::get('/dashboard', [MentorController::class, 'dashboard'])->name('dashboard');
-        Route::post('/schedule', [MentorController::class, 'updateSchedule'])->name('schedule.store');
-        Route::post('/schedule/{schedule}/toggle', [MentorController::class, 'toggleException'])->name('schedule.toggle');
+        Route::get('/schedules', [MentorController::class, 'schedules'])->name('schedules');
+        Route::get('/bundles', [MentorController::class, 'bundles'])->name('bundles');
+        Route::get('/withdrawals', [MentorController::class, 'withdrawals'])->name('withdrawals');
         Route::get('/export-pdf', [MentorController::class, 'exportPdf'])->name('export-pdf');
-        Route::post('/bundles', [MentorController::class, 'storeBundle'])->name('bundles.store');
-        Route::delete('/bundles/{bundle}', [MentorController::class, 'deleteBundle'])->name('bundles.destroy');
         Route::get('/materials', [MentorController::class, 'materials'])->name('materials');
-        Route::post('/materials/upload', [MentorController::class, 'uploadMaterial'])->name('materials.upload');
+        Route::put('/materials/{material}', [MentorController::class, 'updateMaterial'])->name('materials.update');
+        Route::delete('/materials/{material}', [MentorController::class, 'deleteMaterial'])->name('materials.destroy');
         Route::post('/withdrawal', [MentorController::class, 'requestWithdrawal'])->name('withdrawal');
+
+        Route::middleware('mentor.verified')->group(function () {
+            Route::post('/schedule', [MentorController::class, 'updateSchedule'])->name('schedule.store');
+            Route::post('/schedule/{schedule}/toggle', [MentorController::class, 'toggleException'])->name('schedule.toggle');
+            Route::post('/bundles', [MentorController::class, 'storeBundle'])->name('bundles.store');
+            Route::delete('/bundles/{bundle}', [MentorController::class, 'deleteBundle'])->name('bundles.destroy');
+            Route::post('/materials/upload', [MentorController::class, 'uploadMaterial'])->name('materials.upload');
+        });
     });
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
@@ -66,8 +74,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/disputes/{dispute}', [AdminController::class, 'resolveDispute'])->name('disputes.resolve');
         Route::get('/reviews', [AdminController::class, 'reviews'])->name('reviews');
         Route::delete('/reviews/{review}', [AdminController::class, 'deleteReview'])->name('reviews.destroy');
-        Route::get('/broadcasts', [AdminController::class, 'broadcasts'])->name('broadcasts');
-        Route::post('/broadcasts', [AdminController::class, 'sendBroadcast'])->name('broadcasts.send');
         Route::get('/export-transactions-pdf', [AdminController::class, 'exportTransactionsPdf'])->name('export-transactions-pdf');
         Route::get('/test-midtrans', [AdminController::class, 'testMidtrans'])->name('test-midtrans');
     });

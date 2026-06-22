@@ -9,6 +9,8 @@ use App\Models\Transaction;
 use App\Models\Withdrawal;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class MentorController extends Controller
 {
@@ -19,7 +21,7 @@ class MentorController extends Controller
 
         $totalEarnings = $mentor->transactions()
             ->where('status_pembayaran', 'success')
-            ->sum('total_harga');
+            ->sum(DB::raw('COALESCE(jumlah_dibayar, total_harga)'));
         $activeStudents = $mentor->transactions()
             ->where('status_pembayaran', 'success')
             ->distinct('student_id')
@@ -62,7 +64,39 @@ class MentorController extends Controller
             ->get();
 
         $pdf = Pdf::loadView('mentor.report-pdf', compact('transactions', 'mentor'));
-        return $pdf->download('laporan-pendapatan.pdf');
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="laporan-pendapatan.pdf"',
+        ]);
+    }
+
+    public function schedules()
+    {
+        $mentor = auth()->user()->mentor;
+        $allSchedules = $mentor->schedules()->with('transaction.student')->latest()->get();
+        $upcomingSchedules = $allSchedules->where('status', 'booked')->where('waktu_mulai', '>', now());
+        return view('mentor.schedules', compact('mentor', 'allSchedules', 'upcomingSchedules'));
+    }
+
+    public function bundles()
+    {
+        $mentor = auth()->user()->mentor;
+        $mentor->load('bundles');
+        return view('mentor.bundles', compact('mentor'));
+    }
+
+    public function withdrawals()
+    {
+        $mentor = auth()->user()->mentor;
+        $totalEarnings = $mentor->transactions()
+            ->where('status_pembayaran', 'success')
+            ->sum(DB::raw('COALESCE(jumlah_dibayar, total_harga)'));
+        $totalWithdrawn = $mentor->withdrawals()
+            ->where('status', 'approved')
+            ->sum('jumlah');
+        $saldo = $totalEarnings - $totalWithdrawn;
+        $withdrawals = $mentor->withdrawals()->latest()->get();
+        return view('mentor.withdrawals', compact('mentor', 'totalEarnings', 'saldo', 'withdrawals'));
     }
 
     public function updateSchedule(Request $request)
@@ -73,12 +107,21 @@ class MentorController extends Controller
         ]);
 
         $mentor = auth()->user()->mentor;
-        Schedule::create([
-            'mentor_id' => $mentor->id,
-            'waktu_mulai' => $validated['waktu_mulai'],
-            'waktu_selesai' => $validated['waktu_selesai'],
-            'status' => 'available',
-        ]);
+
+        if (!$mentor) {
+            return back()->with('error', 'Data mentor tidak ditemukan.');
+        }
+
+        try {
+            Schedule::create([
+                'mentor_id' => $mentor->id,
+                'waktu_mulai' => $validated['waktu_mulai'],
+                'waktu_selesai' => $validated['waktu_selesai'],
+                'status' => 'available',
+            ]);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menambahkan jadwal: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Jadwal berhasil ditambahkan!');
     }
@@ -122,7 +165,7 @@ class MentorController extends Controller
             'transaction_id' => 'nullable|exists:transactions,id',
         ]);
 
-        $path = $request->file('file')->store('public/materials');
+        $path = $request->file('file')->store('materials', 'public');
         $mentor = auth()->user()->mentor;
 
         Material::create([
@@ -130,7 +173,7 @@ class MentorController extends Controller
             'transaction_id' => $validated['transaction_id'] ?? null,
             'judul' => $validated['judul'],
             'file_path' => $path,
-            'tipe' => $request->file('file')->extension(),
+            'tipe' => $request->file('file')->getClientOriginalExtension(),
         ]);
 
         return back()->with('success', 'Materi berhasil diunggah!');
@@ -147,6 +190,42 @@ class MentorController extends Controller
         return view('mentor.materials', compact('materials', 'transactions'));
     }
 
+    public function updateMaterial(Request $request, Material $material)
+    {
+        if ($material->mentor_id !== auth()->user()->mentor->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,zip|max:10240',
+        ]);
+
+        $data = ['judul' => $validated['judul']];
+
+        if ($request->hasFile('file')) {
+            Storage::disk('public')->delete($material->file_path);
+            $path = $request->file('file')->store('materials', 'public');
+            $data['file_path'] = $path;
+            $data['tipe'] = $request->file('file')->getClientOriginalExtension();
+        }
+
+        $material->update($data);
+        return back()->with('success', 'Materi berhasil diperbarui!');
+    }
+
+    public function deleteMaterial(Material $material)
+    {
+        if ($material->mentor_id !== auth()->user()->mentor->id) {
+            abort(403);
+        }
+
+        Storage::disk('public')->delete($material->file_path);
+        $material->delete();
+
+        return back()->with('success', 'Materi berhasil dihapus!');
+    }
+
     // Withdrawal
     public function requestWithdrawal(Request $request)
     {
@@ -160,7 +239,7 @@ class MentorController extends Controller
         $mentor = auth()->user()->mentor;
         $totalEarnings = $mentor->transactions()
             ->where('status_pembayaran', 'success')
-            ->sum('total_harga');
+            ->sum(DB::raw('COALESCE(jumlah_dibayar, total_harga)'));
         $totalWithdrawn = $mentor->withdrawals()
             ->where('status', 'approved')
             ->sum('jumlah');

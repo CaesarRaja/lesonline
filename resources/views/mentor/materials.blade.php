@@ -18,8 +18,23 @@
             <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.dashboard') }}">
                 <span class="material-symbols-outlined">dashboard</span> Dashboard
             </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.schedules') }}">
+                <span class="material-symbols-outlined">calendar_month</span> Jadwal
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.bundles') }}">
+                <span class="material-symbols-outlined">inventory_2</span> Paket Belajar
+            </a>
             <a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg font-label-bold text-label-bold" href="#">
                 <span class="material-symbols-outlined fill-icon">cloud_upload</span> Upload Materi
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.withdrawals') }}">
+                <span class="material-symbols-outlined">account_balance</span> Penarikan Saldo
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('mentor.export-pdf') }}">
+                <span class="material-symbols-outlined">picture_as_pdf</span> Export Laporan
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors" href="{{ route('profile.edit') }}">
+                <span class="material-symbols-outlined">settings</span> Pengaturan
             </a>
         </nav>
         <div class="pt-4 border-t border-outline-variant mt-auto">
@@ -38,45 +53,48 @@
             <div class="bg-success-bg text-success-text font-label-bold text-label-bold px-4 py-3 rounded-xl">{{ session('success') }}</div>
             @endif
 
-            <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm p-6">
-                <h2 class="font-headline-card text-headline-card text-on-surface mb-4">Upload Materi Baru</h2>
-                <form method="POST" action="{{ route('mentor.materials.upload') }}" enctype="multipart/form-data" class="space-y-4">
-                    @csrf
-                    <div>
-                        <label class="font-label-sm text-label-sm text-text-muted block mb-1">Judul Materi</label>
-                        <input name="judul" class="w-full border border-outline-variant rounded-lg px-4 py-2.5 font-body-main" required>
-                    </div>
-                    <div>
-                        <label class="font-label-sm text-label-sm text-text-muted block mb-1">File (PDF, DOC, PPT, ZIP - max 10MB)</label>
-                        <input type="file" name="file" class="w-full border border-outline-variant rounded-lg px-4 py-2.5 font-body-main" required>
-                    </div>
-                    <div>
-                        <label class="font-label-sm text-label-sm text-text-muted block mb-1">Khusus Transaksi (opsional)</label>
-                        <select name="transaction_id" class="w-full border border-outline-variant rounded-lg px-4 py-2.5 font-body-main">
-                            <option value="">Semua siswa</option>
-                            @foreach($transactions as $t)
-                            <option value="{{ $t->id }}">{{ $t->student->name }} - {{ $t->schedule?->waktu_mulai?->format('d M') ?? '' }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <button class="bg-primary text-on-primary font-label-bold text-label-bold px-6 py-2.5 rounded-lg hover:bg-primary/90 transition-colors shadow-sm" type="submit">Upload</button>
-                </form>
+            <div class="flex items-center justify-between">
+                <h1 class="font-display-logo text-2xl text-text-main font-extrabold">Daftar Materi</h1>
+                <button onclick="openModal()" class="bg-primary text-on-primary font-label-bold text-label-bold px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">add</span> Upload Materi
+                </button>
             </div>
 
             <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm p-6">
-                <h2 class="font-headline-card text-headline-card text-on-surface mb-4">Daftar Materi</h2>
                 @forelse($materials as $material)
-                <div class="flex items-center justify-between py-3 border-b border-outline-variant/30 last:border-0">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-primary">description</span>
-                        <div>
-                            <p class="font-label-bold text-label-bold text-text-main">{{ $material->judul }}</p>
-                            <p class="font-label-sm text-label-sm text-text-muted">{{ strtoupper($material->tipe) }} - {{ $material->transaction ? $material->transaction->student->name : 'Semua siswa' }}</p>
+                <div class="py-3 border-b border-outline-variant/30 last:border-0">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">description</span>
+                            <div>
+                                <p class="font-label-bold text-label-bold text-text-main">{{ $material->judul }}</p>
+                                <p class="font-label-sm text-label-sm text-text-muted">{{ strtoupper($material->tipe) }} - {{ $material->transaction ? $material->transaction->student->name : 'Semua siswa' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ asset('storage/' . $material->file_path) }}" class="text-primary hover:text-primary-container" download target="_blank">
+                                <span class="material-symbols-outlined">download</span>
+                            </a>
+                            <button onclick="toggleEdit({{ $material->id }})" class="text-on-surface-variant hover:text-primary">
+                                <span class="material-symbols-outlined">edit</span>
+                            </button>
+                            <form method="POST" action="{{ route('mentor.materials.destroy', $material) }}" onsubmit="return confirm('Yakin ingin menghapus materi ini?')">
+                                @csrf @method('DELETE')
+                                <button class="text-error hover:text-error/80"><span class="material-symbols-outlined">delete</span></button>
+                            </form>
                         </div>
                     </div>
-                    <a href="{{ asset('storage/' . str_replace('public/', '', $material->file_path)) }}" class="text-primary hover:text-primary-container" download target="_blank">
-                        <span class="material-symbols-outlined">download</span>
-                    </a>
+                    <div id="edit-form-{{ $material->id }}" class="hidden mt-3 pt-3 border-t border-outline-variant/20">
+                        <form method="POST" action="{{ route('mentor.materials.update', $material) }}" enctype="multipart/form-data" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            @csrf @method('PUT')
+                            <input name="judul" value="{{ $material->judul }}" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main text-sm" required>
+                            <input type="file" name="file" class="border border-outline-variant rounded-lg px-3 py-2 font-body-main text-sm">
+                            <div class="flex gap-2">
+                                <button class="bg-primary text-on-primary font-label-bold text-label-bold px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm" type="submit">Simpan</button>
+                                <button type="button" onclick="toggleEdit({{ $material->id }})" class="bg-surface-variant text-on-surface-variant font-label-bold text-label-bold px-4 py-2 rounded-lg hover:bg-outline-variant transition-colors text-sm">Batal</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
                 @empty
                 <p class="font-body-main text-body-main text-text-muted text-center py-4">Belum ada materi.</p>
@@ -85,4 +103,97 @@
         </div>
     </main>
 </div>
+
+<style>
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes modalFadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes modalSlideDown {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(24px) scale(0.96); }
+}
+.modal-overlay-show { animation: modalFadeIn 0.2s ease-out forwards; }
+.modal-overlay-hide { animation: modalFadeOut 0.15s ease-in forwards; }
+.modal-content-show { animation: modalSlideUp 0.25s ease-out forwards; }
+.modal-content-hide { animation: modalSlideDown 0.15s ease-in forwards; }
+</style>
+
+<!-- Modal Upload -->
+<div id="upload-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+    <div id="modal-card" class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-headline-card text-headline-card text-on-surface">Upload Materi Baru</h2>
+            <button onclick="closeModal()" class="text-on-surface-variant hover:text-error">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="{{ route('mentor.materials.upload') }}" enctype="multipart/form-data" class="space-y-4">
+            @csrf
+            <div>
+                <label class="font-label-sm text-label-sm text-text-muted block mb-1">Judul Materi</label>
+                <input name="judul" class="w-full border border-outline-variant rounded-lg px-4 py-2.5 font-body-main" required>
+            </div>
+            <div>
+                <label class="font-label-sm text-label-sm text-text-muted block mb-1">File (PDF, DOC, PPT, ZIP - max 10MB)</label>
+                <input type="file" name="file" class="w-full border border-outline-variant rounded-lg px-4 py-2.5 font-body-main" required>
+            </div>
+            <div>
+                <label class="font-label-sm text-label-sm text-text-muted block mb-1">Khusus Transaksi (opsional)</label>
+                <select name="transaction_id" class="w-full border border-outline-variant rounded-lg px-4 py-2.5 font-body-main">
+                    <option value="">Semua siswa</option>
+                    @foreach($transactions as $t)
+                    <option value="{{ $t->id }}">{{ $t->student->name }} - {{ $t->schedule?->waktu_mulai?->format('d M') ?? '' }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeModal()" class="bg-surface-variant text-on-surface-variant font-label-bold text-label-bold px-5 py-2.5 rounded-lg hover:bg-outline-variant transition-colors">Batal</button>
+                <button class="bg-primary text-on-primary font-label-bold text-label-bold px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors shadow-sm" type="submit">Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const overlay = document.getElementById('upload-modal');
+const card = document.getElementById('modal-card');
+
+function toggleEdit(id) {
+    const form = document.getElementById('edit-form-' + id);
+    form.classList.toggle('hidden');
+}
+
+function openModal() {
+    overlay.classList.remove('hidden', 'modal-overlay-hide');
+    card.classList.remove('modal-content-hide');
+    overlay.classList.add('flex', 'modal-overlay-show');
+    card.classList.add('modal-content-show');
+}
+
+function closeModal() {
+    overlay.classList.remove('modal-overlay-show');
+    card.classList.remove('modal-content-show');
+    overlay.classList.add('modal-overlay-hide');
+    card.classList.add('modal-content-hide');
+    card.addEventListener('animationend', function onEnd() {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex', 'modal-overlay-hide');
+        card.classList.remove('modal-content-hide');
+        card.removeEventListener('animationend', onEnd);
+    });
+}
+
+overlay.addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
 @endsection

@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'mentor@bimbeledu.com',
             'password' => bcrypt('password'),
             'role' => 'mentor',
+            'verification_status' => 'verified',
         ]);
 
         $mentor = Mentor::create([
@@ -47,6 +48,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'mentor2@bimbeledu.com',
             'password' => bcrypt('password'),
             'role' => 'mentor',
+            'verification_status' => 'verified',
         ]);
 
         $mentor2 = Mentor::create([
@@ -63,6 +65,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'mentor3@bimbeledu.com',
             'password' => bcrypt('password'),
             'role' => 'mentor',
+            'verification_status' => 'verified',
         ]);
 
         $mentor3 = Mentor::create([

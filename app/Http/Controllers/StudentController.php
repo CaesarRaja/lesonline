@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Coupon;
 use App\Models\Dispute;
+use App\Models\Material;
 use App\Models\Mentor;
 use App\Models\MentorFavorite;
 use App\Models\Schedule;
@@ -159,7 +160,8 @@ class StudentController extends Controller
             ->where('status_pembayaran', 'success')
             ->has('materials')
             ->get();
-        return view('student.materials', compact('transactions'));
+        $generalMaterials = Material::whereNull('transaction_id')->with('mentor.user')->get();
+        return view('student.materials', compact('transactions', 'generalMaterials'));
     }
 
     public function toggleFavorite(Mentor $mentor)
