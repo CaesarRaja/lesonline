@@ -8,12 +8,12 @@ class PlatformFee extends Model
 {
     protected $fillable = ['persentase', 'nominal_tetap', 'is_active'];
 
-    public static function getActive()
+    public static function getActive(): ?self
     {
         return self::where('is_active', true)->first();
     }
 
-    public function calculate($amount)
+    public function calculate(float $amount): float
     {
         return ($amount * $this->persentase / 100) + $this->nominal_tetap;
     }

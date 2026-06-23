@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Review extends Model
 {
@@ -10,7 +11,7 @@ class Review extends Model
         'transaction_id', 'rating', 'komentar',
     ];
 
-    public function transaction()
+    public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class);
     }

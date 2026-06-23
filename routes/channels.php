@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('schedule.{mentorId}', function ($user, $mentorId) {

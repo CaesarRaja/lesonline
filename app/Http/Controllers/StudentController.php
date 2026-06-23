@@ -2,38 +2,47 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Coupon;
+use App\Actions\ApplyCouponAction;
+use App\Actions\BookScheduleAction;
+use App\Actions\CancelTransactionAction;
+use App\Actions\RescheduleScheduleAction;
+use App\Enums\ScheduleStatus;
+use App\Enums\TransactionStatus;
+use App\Enums\UserRole;
+use App\Http\Requests\ApplyCouponRequest;
+use App\Http\Requests\StoreReviewRequest;
 use App\Models\Material;
 use App\Models\Mentor;
 use App\Models\MentorFavorite;
-use App\Models\Message;
 use App\Models\Schedule;
 use App\Models\Transaction;
-use App\Models\User;
+use App\Services\ChatService;
+use App\Services\MidtransService;
+use App\Services\ReviewService;
+use App\Services\TransactionService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Midtrans\Snap;
-use Midtrans\Config;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentController extends Controller
 {
-    public function __construct()
-    {
-        Config::$serverKey = config('services.midtrans.server_key');
-        Config::$isProduction = config('services.midtrans.is_production');
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
-    }
+    public function __construct(
+        private TransactionService $transactionService,
+        private MidtransService $midtransService,
+        private ReviewService $reviewService,
+        private BookScheduleAction $bookScheduleAction,
+        private ApplyCouponAction $applyCouponAction,
+        private CancelTransactionAction $cancelTransactionAction,
+        private RescheduleScheduleAction $rescheduleScheduleAction,
+    ) {}
 
-    public function dashboard()
+    public function dashboard(): View
     {
-        Transaction::where('status_pembayaran', 'pending')
-            ->where('created_at', '<=', now()->subMinutes(30))
-            ->each(function ($t) {
-                $t->schedule?->update(['status' => 'available']);
-                $t->delete();
-            });
+        $this->transactionService->cleanupPendingTransactions();
 
         $user = auth()->user();
         $transactions = Transaction::with('mentor.user', 'schedule')
@@ -42,197 +51,138 @@ class StudentController extends Controller
             ->get();
         $totalJam = $transactions->where('status_pembayaran', 'success')->count() * 1;
         $kelasMendatang = $transactions->where('status_pembayaran', 'success')
-            ->filter(fn($t) => $t->schedule && $t->schedule->waktu_mulai > now());
+            ->filter(fn ($t) => $t->schedule && $t->schedule->waktu_mulai > now());
         $favorites = MentorFavorite::with('mentor.user')
             ->where('student_id', $user->id)
             ->get();
+
         return view('student.dashboard', compact('transactions', 'totalJam', 'kelasMendatang', 'favorites'));
     }
 
-    public function bookSchedule(Schedule $schedule)
+    public function bookSchedule(Schedule $schedule): View|RedirectResponse
     {
-        if ($schedule->status !== 'available') {
+        if ($schedule->status !== ScheduleStatus::Available->value) {
             return back()->with('error', 'Jadwal sudah dipesan.');
         }
 
-        $mentor = $schedule->mentor;
-        $user = auth()->user();
-
-        $transaction = Transaction::create([
-            'student_id' => $user->id,
-            'mentor_id' => $mentor->id,
-            'schedule_id' => $schedule->id,
-            'total_harga' => $mentor->tarif_per_jam,
-            'status_pembayaran' => 'pending',
-        ]);
-
-        $orderId = 'BIMBELEDU-' . $transaction->id . '-' . time();
-        $transaction->update(['midtrans_order_id' => $orderId]);
-
-        $params = [
-            'transaction_details' => [
-                'order_id' => $orderId,
-                'gross_amount' => (int) $mentor->tarif_per_jam,
-            ],
-            'customer_details' => [
-                'first_name' => $user->name,
-                'email' => $user->email,
-            ],
-            'item_details' => [
-                [
-                    'id' => $mentor->id,
-                    'price' => (int) $mentor->tarif_per_jam,
-                    'quantity' => 1,
-                    'name' => 'Sesi Belajar dengan ' . $mentor->user->name,
-                ],
-            ],
-        ];
-
         try {
-            $snapToken = Snap::getSnapToken($params);
-            return view('student.payment', compact('snapToken', 'transaction'));
+            $result = $this->bookScheduleAction->execute($schedule, auth()->id());
+
+            return view('student.payment', [
+                'snapToken' => $result['snapToken'],
+                'transaction' => $result['transaction'],
+            ]);
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memproses pembayaran: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memproses pembayaran: '.$e->getMessage());
         }
     }
 
-    public function paymentSuccess(Request $request)
+    public function paymentSuccess(Request $request): RedirectResponse
     {
         $transaction = Transaction::where('midtrans_order_id', $request->order_id)->first();
+
         if ($transaction) {
-            $fee = \App\Models\PlatformFee::getActive();
             $jumlahDibayar = $transaction->total_harga;
-            $potongan = $fee ? $fee->calculate($jumlahDibayar) : 0;
+            $netAmount = $this->transactionService->calculateNetAmount($jumlahDibayar);
+
             $transaction->update([
-                'status_pembayaran' => 'success',
-                'jumlah_dibayar' => $jumlahDibayar - $potongan,
+                'status_pembayaran' => TransactionStatus::Success->value,
+                'jumlah_dibayar' => $netAmount,
                 'midtrans_transaction_id' => $request->transaction_id,
                 'midtrans_response' => $request->all(),
             ]);
-            $transaction->schedule->update(['status' => 'booked']);
+
+            $transaction->schedule->update(['status' => ScheduleStatus::Booked->value]);
         }
+
         return redirect()->route('student.dashboard')->with('success', 'Pembayaran berhasil!');
     }
 
-    public function applyCoupon(Request $request)
+    public function applyCoupon(ApplyCouponRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'kode' => 'required|string|max:50',
-            'transaction_id' => 'required|exists:transactions,id',
-        ]);
+        try {
+            $transaction = $this->applyCouponAction->execute(
+                $request->validated('kode'),
+                $request->validated('transaction_id'),
+            );
 
-        $coupon = Coupon::where('kode', $validated['kode'])->first();
-        $transaction = Transaction::findOrFail($validated['transaction_id']);
+            $diskon = $transaction->total_harga - $transaction->jumlah_dibayar;
 
-        if (!$coupon || !$coupon->isValid()) {
-            return back()->with('error', 'Kode promo tidak valid atau sudah habis.');
+            return back()->with(
+                'success',
+                'Kode promo berhasil diterapkan! Potongan: Rp '.number_format($diskon, 0, ',', '.'),
+            );
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $jumlahDibayar = $coupon->applyTo($transaction->total_harga);
-        $transaction->update([
-            'coupon_id' => $coupon->id,
-            'jumlah_dibayar' => $jumlahDibayar,
-        ]);
-        $coupon->increment('terpakai');
-
-        return back()->with('success', 'Kode promo berhasil diterapkan! Potongan: Rp ' . number_format($transaction->total_harga - $jumlahDibayar, 0, ',', '.'));
     }
 
-    public function requestCancel(Transaction $transaction)
+    public function requestCancel(Request $request, Transaction $transaction): RedirectResponse
     {
-        if ($transaction->student_id !== auth()->id()) {
-            abort(403);
+        Gate::authorize('cancel', $transaction);
+
+        try {
+            $this->cancelTransactionAction->execute($transaction, $request->alasan);
+
+            return back()->with('success', 'Pengajuan pembatalan telah dikirim.');
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
         }
-        if ($transaction->schedule && $transaction->schedule->waktu_mulai->diffInHours(now()) < 24) {
-            return back()->with('error', 'Pembatalan hanya bisa dilakukan minimal 24 jam sebelum kelas dimulai.');
-        }
-        $transaction->update([
-            'alasan_pembatalan' => request('alasan'),
-            'cancelled_at' => now(),
-            'refund_status' => 'pending',
-        ]);
-        return back()->with('success', 'Pengajuan pembatalan telah dikirim.');
     }
 
-    public function payments()
+    public function payments(): View
     {
-        Transaction::where('status_pembayaran', 'pending')
-            ->where('created_at', '<=', now()->subMinutes(30))
-            ->each(function ($t) {
-                $t->schedule?->update(['status' => 'available']);
-                $t->delete();
-            });
+        $this->transactionService->cleanupPendingTransactions();
 
-        $transactions = Transaction::with('mentor.user', 'schedule', 'coupon')
-            ->where('student_id', auth()->id())
-            ->latest()
-            ->paginate(10);
+        $transactions = $this->transactionService->getUserTransactions(auth()->id(), perPage: 10);
+
         return view('student.payments', compact('transactions'));
     }
 
-    public function payPending(Transaction $transaction)
+    public function payPending(Transaction $transaction): View|RedirectResponse
     {
-        if ($transaction->student_id !== auth()->id()) abort(403);
-        if ($transaction->status_pembayaran !== 'pending') {
+        Gate::authorize('pay', $transaction);
+
+        if ($transaction->status_pembayaran !== TransactionStatus::Pending->value) {
             return back()->with('error', 'Transaksi ini sudah diproses.');
         }
 
-        $params = [
-            'transaction_details' => [
-                'order_id' => $transaction->midtrans_order_id,
-                'gross_amount' => (int) $transaction->total_harga,
-            ],
-            'customer_details' => [
-                'first_name' => auth()->user()->name,
-                'email' => auth()->user()->email,
-            ],
-            'item_details' => [[
-                'id' => $transaction->mentor_id,
-                'price' => (int) $transaction->total_harga,
-                'quantity' => 1,
-                'name' => 'Sesi Belajar dengan ' . $transaction->mentor->user->name,
-            ]],
-        ];
-
         try {
-            $snapToken = Snap::getSnapToken($params);
+            $params = $this->midtransService->buildTransactionParams($transaction);
+            $snapToken = $this->midtransService->generateSnapToken($params);
+
             return view('student.payment', compact('snapToken', 'transaction'));
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memproses pembayaran: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memproses pembayaran: '.$e->getMessage());
         }
     }
 
-    public function materials()
+    public function materials(): View
     {
         $transactions = Transaction::with('materials')
             ->where('student_id', auth()->id())
-            ->where('status_pembayaran', 'success')
+            ->success()
             ->has('materials')
             ->get();
         $generalMaterials = Material::whereNull('transaction_id')->with('mentor.user')->get();
+
         return view('student.materials', compact('transactions', 'generalMaterials'));
     }
 
-    public function downloadMaterial(Material $material)
+    public function downloadMaterial(Material $material): RedirectResponse|BinaryFileResponse|StreamedResponse
     {
-        $hasAccess = Transaction::where('student_id', auth()->id())
-            ->where('status_pembayaran', 'success')
-            ->whereHas('materials', fn($q) => $q->where('id', $material->id))
-            ->exists();
+        Gate::authorize('download', $material);
 
-        if (!$hasAccess && $material->transaction_id !== null) {
-            abort(403);
-        }
-
-        if (!Storage::disk('public')->exists($material->file_path)) {
+        if (! Storage::disk('public')->exists($material->file_path)) {
             abort(404);
         }
 
-        $filename = $material->judul . '.' . $material->tipe;
+        $filename = $material->judul.'.'.$material->tipe;
+
         return Storage::disk('public')->download($material->file_path, $filename);
     }
 
-    public function toggleFavorite(Mentor $mentor)
+    public function toggleFavorite(Mentor $mentor): RedirectResponse
     {
         $user = auth()->user();
         $fav = MentorFavorite::where('student_id', $user->id)
@@ -241,105 +191,47 @@ class StudentController extends Controller
 
         if ($fav) {
             $fav->delete();
+
             return back()->with('success', 'Mentor dihapus dari favorit.');
         }
+
         MentorFavorite::create([
             'student_id' => $user->id,
             'mentor_id' => $mentor->id,
         ]);
+
         return back()->with('success', 'Mentor ditambahkan ke favorit!');
     }
 
-    public function storeReview(Request $request, Transaction $transaction)
+    public function storeReview(StoreReviewRequest $request, Transaction $transaction): RedirectResponse
     {
-        $validated = $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'komentar' => 'nullable|string|max:500',
-        ]);
+        $transaction->review()->create($request->validated());
 
-        $transaction->review()->create($validated);
-
-        $avgRating = \DB::table('reviews')
-            ->join('transactions', 'reviews.transaction_id', '=', 'transactions.id')
-            ->where('transactions.mentor_id', $transaction->mentor_id)
-            ->where('transactions.status_pembayaran', 'success')
-            ->avg('reviews.rating');
-
-        $transaction->mentor()->update(['rating_rata_rata' => $avgRating ?? 0]);
+        $this->reviewService->updateMentorAverageRating($transaction->mentor);
 
         return back()->with('success', 'Ulasan berhasil dikirim!');
     }
 
-    public function rescheduleSchedule(Request $request, Transaction $transaction)
+    public function rescheduleSchedule(Request $request, Transaction $transaction): RedirectResponse
     {
-        if ($transaction->student_id !== auth()->id()) {
-            abort(403);
-        }
-        if ($transaction->status_pembayaran !== 'success') {
-            return back()->with('error', 'Hanya transaksi berhasil yang dapat di-reschedule.');
-        }
-        if ($transaction->schedule && $transaction->schedule->waktu_mulai->diffInHours(now()) < 24) {
-            return back()->with('error', 'Reschedule hanya bisa dilakukan minimal 24 jam sebelum kelas dimulai.');
-        }
+        Gate::authorize('reschedule', $transaction);
 
-        $validated = $request->validate([
-            'new_schedule_id' => 'required|exists:schedules,id',
-        ]);
+        try {
+            $this->rescheduleScheduleAction->execute(
+                $transaction,
+                $request->input('new_schedule_id'),
+            );
 
-        $newSchedule = Schedule::findOrFail($validated['new_schedule_id']);
-        if ($newSchedule->status !== 'available') {
-            return back()->with('error', 'Jadwal baru tidak tersedia.');
+            return back()->with('success', 'Jadwal berhasil diubah!');
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
         }
-        if ($newSchedule->mentor_id !== $transaction->mentor_id) {
-            return back()->with('error', 'Jadwal baru harus dengan mentor yang sama.');
-        }
-
-        $oldSchedule = $transaction->schedule;
-        if ($oldSchedule) {
-            $oldSchedule->update(['status' => 'available']);
-        }
-
-        $newSchedule->update(['status' => 'booked']);
-        $transaction->update(['schedule_id' => $newSchedule->id]);
-
-        return back()->with('success', 'Jadwal berhasil diubah!');
     }
 
-    public function chat()
+    public function chat(): View
     {
-        $mentors = User::whereIn('id', function ($q) {
-            $q->select('sender_id')->from('messages')
-                ->where('receiver_id', auth()->id())
-                ->union(
-                    DB::table('messages')->select('receiver_id')
-                        ->where('sender_id', auth()->id())
-                );
-        })
-        ->where('role', 'mentor')
-        ->select('id', 'name')
-        ->get()
-        ->map(function ($mentor) {
-            $lastMsg = Message::where(function ($q) use ($mentor) {
-                $q->where('sender_id', auth()->id())->where('receiver_id', $mentor->id);
-            })->orWhere(function ($q) use ($mentor) {
-                $q->where('sender_id', $mentor->id)->where('receiver_id', auth()->id());
-            })->latest()->first();
-
-            $unread = Message::where('sender_id', $mentor->id)
-                ->where('receiver_id', auth()->id())
-                ->where('dibaca', false)
-                ->count();
-
-            return (object) [
-                'id' => $mentor->id,
-                'name' => $mentor->name,
-                'last_message' => $lastMsg?->isi,
-                'last_time' => $lastMsg?->created_at,
-                'unread' => $unread,
-            ];
-        })
-        ->sortByDesc(fn($m) => $m->last_time)
-        ->values();
+        $mentors = app(ChatService::class)
+            ->getConversations(auth()->user(), UserRole::Mentor);
 
         return view('student.chat', compact('mentors'));
     }

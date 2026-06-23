@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Mentor;
-use App\Models\Schedule;
-use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 

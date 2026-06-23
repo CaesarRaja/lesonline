@@ -2,22 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class MentorSettingsController extends Controller
 {
-    public function edit()
+    public function edit(): View|RedirectResponse
     {
         $mentor = auth()->user()->mentor;
 
-        if (!$mentor) {
+        if (! $mentor) {
             return back()->with('error', 'Data mentor tidak ditemukan.');
         }
 
         return view('mentor.settings', compact('mentor'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'tarif_per_jam' => 'required|numeric|min:0',
@@ -28,7 +30,7 @@ class MentorSettingsController extends Controller
 
         $mentor = auth()->user()->mentor;
 
-        if (!$mentor) {
+        if (! $mentor) {
             return back()->with('error', 'Data mentor tidak ditemukan.');
         }
 

@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
-use Database\Factories\UserFactory;
+use App\Enums\UserRole;
+use App\Enums\VerificationStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -16,34 +20,49 @@ class User extends Authenticatable
 
     protected $hidden = ['password', 'remember_token'];
 
-    public function mentor()
+    public function mentor(): HasOne
     {
         return $this->hasOne(Mentor::class);
     }
 
-    public function studentTransactions()
+    public function studentTransactions(): HasMany
     {
         return $this->hasMany(Transaction::class, 'student_id');
     }
 
-    public function favorites()
+    public function favorites(): HasMany
     {
         return $this->hasMany(MentorFavorite::class, 'student_id');
     }
 
-    public function isStudent()
+    public function isStudent(): bool
     {
-        return $this->role === 'student';
+        return $this->role === UserRole::Student->value;
     }
 
-    public function isMentor()
+    public function isMentor(): bool
     {
-        return $this->role === 'mentor';
+        return $this->role === UserRole::Mentor->value;
     }
 
-    public function isAdmin()
+    public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === UserRole::Admin->value;
+    }
+
+    public function scopeMentors(Builder $query): Builder
+    {
+        return $query->where('role', UserRole::Mentor->value);
+    }
+
+    public function scopeStudents(Builder $query): Builder
+    {
+        return $query->where('role', UserRole::Student->value);
+    }
+
+    public function scopePendingVerification(Builder $query): Builder
+    {
+        return $query->where('verification_status', VerificationStatus::Pending->value);
     }
 
     protected function casts(): array

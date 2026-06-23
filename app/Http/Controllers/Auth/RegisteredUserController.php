@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserRole;
+use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -42,10 +44,12 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'verification_status' => $request->role === 'mentor' ? 'pending' : 'verified',
+            'verification_status' => $request->role === UserRole::Mentor->value
+                ? VerificationStatus::Pending->value
+                : VerificationStatus::Verified->value,
         ]);
 
-        if ($request->role === 'mentor') {
+        if ($request->role === UserRole::Mentor->value) {
             $user->mentor()->create([
                 'bio' => 'Saya siap mengajar!',
                 'tarif_per_jam' => 100000,
@@ -59,8 +63,8 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         $dashboardRoute = match ($user->role) {
-            'admin' => 'admin.dashboard',
-            'mentor' => 'mentor.dashboard',
+            UserRole::Admin->value => 'admin.dashboard',
+            UserRole::Mentor->value => 'mentor.dashboard',
             default => 'student.dashboard',
         };
 

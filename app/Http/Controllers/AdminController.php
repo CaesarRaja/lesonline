@@ -2,32 +2,39 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Enums\VerificationStatus;
+use App\Enums\WithdrawalStatus;
+use App\Http\Requests\ResolveWithdrawalRequest;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdatePlatformFeeRequest;
+use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\VerifyMentorRequest;
 use App\Models\PlatformFee;
 use App\Models\Review;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Withdrawal;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Midtrans\Config;
-
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 class AdminController extends Controller
 {
-    public function dashboard()
+    public function dashboard(): View
     {
         $totalUsers = User::count();
-        $totalStudents = User::where('role', 'student')->count();
-        $totalMentors = User::where('role', 'mentor')->count();
-        $pendingVerifications = User::where('role', 'mentor')->where('verification_status', 'pending')->count();
-        $totalTransactions = Transaction::where('status_pembayaran', 'success')->count();
-        $totalRevenue = Transaction::where('status_pembayaran', 'success')->sum('total_harga');
-        $totalKomisi = Transaction::where('status_pembayaran', 'success')
+        $totalStudents = User::students()->count();
+        $totalMentors = User::mentors()->count();
+        $pendingVerifications = User::pendingVerification()->mentors()->count();
+        $totalTransactions = Transaction::success()->count();
+        $totalRevenue = Transaction::success()->sum('total_harga');
+        $totalKomisi = Transaction::success()
             ->whereNotNull('jumlah_dibayar')
-            ->sum(DB::raw('total_harga - jumlah_dibayar'));
-        $pendingWithdrawals = Withdrawal::where('status', 'pending')->count();
+            ->sum(\DB::raw('total_harga - jumlah_dibayar'));
+        $pendingWithdrawals = Withdrawal::where('status', WithdrawalStatus::Pending->value)->count();
         $recentTransactions = Transaction::with('student', 'mentor.user', 'schedule')
             ->latest()
             ->take(5)
@@ -36,33 +43,27 @@ class AdminController extends Controller
         return view('admin.dashboard', compact(
             'totalUsers', 'totalStudents', 'totalMentors', 'pendingVerifications',
             'totalTransactions', 'totalRevenue', 'totalKomisi', 'pendingWithdrawals',
-            'recentTransactions'
+            'recentTransactions',
         ));
     }
 
-    public function users()
+    public function users(): View
     {
         $users = User::with('mentor')->latest()->paginate(10);
         $trashedCount = User::onlyTrashed()->count();
+
         return view('admin.users', compact('users', 'trashedCount'));
     }
 
-    public function storeUser(Request $request)
+    public function storeUser(StoreUserRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8',
-            'role' => 'required|in:student,mentor,admin',
-            'verification_status' => 'nullable|in:pending,verified,rejected',
-        ]);
-
+        $validated = $request->validated();
         $validated['password'] = bcrypt($validated['password']);
-        $validated['verification_status'] ??= 'pending';
+        $validated['verification_status'] ??= VerificationStatus::Pending->value;
 
         $user = User::create($validated);
 
-        if ($user->role === 'mentor') {
+        if ($user->isMentor()) {
             $user->mentor()->create([
                 'keahlian' => $request->keahlian ?? '',
                 'tarif_per_jam' => $request->tarif_per_jam ?? 0,
@@ -74,19 +75,13 @@ class AdminController extends Controller
         return back()->with('success', 'User berhasil ditambahkan.');
     }
 
-    public function updateUser(Request $request, User $user)
+    public function updateUser(UpdateUserRequest $request, User $user): RedirectResponse
     {
         if ($user->isAdmin() && User::where('role', 'admin')->count() <= 1 && $request->role !== 'admin') {
             return back()->with('error', 'Tidak dapat mengubah role admin terakhir.');
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8',
-            'role' => 'required|in:student,mentor,admin',
-            'verification_status' => 'nullable|in:pending,verified,rejected',
-        ]);
+        $validated = $request->validated();
 
         if ($request->filled('password')) {
             $validated['password'] = bcrypt($validated['password']);
@@ -96,34 +91,28 @@ class AdminController extends Controller
 
         $user->update($validated);
 
-        if ($user->role === 'mentor') {
+        if ($user->isMentor()) {
+            $mentorData = [
+                'keahlian' => $request->keahlian ?? '',
+                'tarif_per_jam' => $request->tarif_per_jam ?? 0,
+                'bio' => $request->bio ?? '',
+                'link_meeting' => $request->link_meeting ?? '',
+            ];
+
             if ($user->mentor) {
-                $user->mentor()->update([
-                    'keahlian' => $request->keahlian ?? '',
-                    'tarif_per_jam' => $request->tarif_per_jam ?? 0,
-                    'bio' => $request->bio ?? '',
-                    'link_meeting' => $request->link_meeting ?? '',
-                ]);
+                $user->mentor()->update($mentorData);
             } else {
-                $user->mentor()->create([
-                    'keahlian' => $request->keahlian ?? '',
-                    'tarif_per_jam' => $request->tarif_per_jam ?? 0,
-                    'bio' => $request->bio ?? '',
-                    'link_meeting' => $request->link_meeting ?? '',
-                ]);
+                $user->mentor()->create($mentorData);
             }
         }
 
         return back()->with('success', 'User berhasil diperbarui.');
     }
 
-    public function destroyUser(User $user)
+    public function destroyUser(User $user): RedirectResponse
     {
-        if ($user->id === auth()->id()) {
-            return back()->with('error', 'Tidak dapat menghapus akun sendiri.');
-        }
-        if ($user->isAdmin() && User::where('role', 'admin')->count() <= 1) {
-            return back()->with('error', 'Tidak dapat menghapus admin terakhir.');
+        if (! Gate::allows('delete', $user)) {
+            return back()->with('error', 'Tidak dapat menghapus akun ini.');
         }
 
         if ($user->isMentor() && $user->mentor) {
@@ -135,95 +124,81 @@ class AdminController extends Controller
         return back()->with('success', 'User berhasil dihapus.');
     }
 
-    // KYC Verification
-    public function verifications()
+    public function verifications(): View
     {
-        $mentors = User::where('role', 'mentor')
-            ->whereIn('verification_status', ['pending', 'verified', 'rejected'])
+        $mentors = User::mentors()
+            ->whereIn('verification_status', [
+                VerificationStatus::Pending->value,
+                VerificationStatus::Verified->value,
+                VerificationStatus::Rejected->value,
+            ])
             ->with('mentor')
             ->latest()
             ->get();
+
         return view('admin.verifications', compact('mentors'));
     }
 
-    public function verifyMentor(Request $request, User $user)
+    public function verifyMentor(VerifyMentorRequest $request, User $user): RedirectResponse
     {
-        $validated = $request->validate([
-            'status' => 'required|in:verified,rejected',
-            'alasan' => 'nullable|string|max:500',
-        ]);
+        $user->update(['verification_status' => $request->validated('status')]);
 
-        $user->update(['verification_status' => $validated['status']]);
         return back()->with('success', 'Status verifikasi mentor berhasil diperbarui.');
     }
 
-    // Platform Fee
-    public function fees()
+    public function fees(): View
     {
         $fee = PlatformFee::getActive();
+
         return view('admin.fees', compact('fee'));
     }
 
-    public function updateFees(Request $request)
+    public function updateFees(UpdatePlatformFeeRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'persentase' => 'required|numeric|min:0|max:100',
-            'nominal_tetap' => 'required|numeric|min:0',
-        ]);
-
         PlatformFee::where('is_active', true)->update(['is_active' => false]);
-        PlatformFee::create(array_merge($validated, ['is_active' => true]));
+
+        PlatformFee::create(array_merge($request->validated(), ['is_active' => true]));
 
         return back()->with('success', 'Konfigurasi komisi platform berhasil diperbarui.');
     }
 
-    // Withdrawals Management
-    public function withdrawals()
+    public function withdrawals(): View
     {
         $withdrawals = Withdrawal::with('mentor.user')->latest()->get();
+
         return view('admin.withdrawals', compact('withdrawals'));
     }
 
-    public function resolveWithdrawal(Request $request, Withdrawal $withdrawal)
+    public function resolveWithdrawal(ResolveWithdrawalRequest $request, Withdrawal $withdrawal): RedirectResponse
     {
-        $validated = $request->validate([
-            'status' => 'required|in:approved,rejected',
-            'alasan_penolakan' => 'nullable|required_if:status,rejected|string|max:500',
-        ]);
+        $withdrawal->update($request->validated());
 
-        $withdrawal->update($validated);
         return back()->with('success', 'Status penarikan dana berhasil diperbarui.');
     }
 
-    public function __construct()
-    {
-        Config::$serverKey = config('services.midtrans.server_key');
-        Config::$isProduction = config('services.midtrans.is_production');
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
-    }
-
-    // Reviews Moderation
-    public function reviews()
+    public function reviews(): View
     {
         $reviews = Review::with('transaction.mentor.user', 'transaction.student')->latest()->get();
+
         return view('admin.reviews', compact('reviews'));
     }
 
-    public function deleteReview(Review $review)
+    public function deleteReview(Review $review): RedirectResponse
     {
         $review->delete();
+
         return back()->with('success', 'Ulasan berhasil dihapus.');
     }
 
-    public function exportTransactionsPdf(Request $request)
+    public function exportTransactionsPdf(Request $request): Response
     {
         $query = Transaction::with('student', 'mentor.user', 'schedule')
-            ->where('status_pembayaran', 'success');
+            ->success();
 
         if ($request->filled('from')) {
             $query->whereDate('created_at', '>=', $request->from);
         }
+
         if ($request->filled('to')) {
             $query->whereDate('created_at', '<=', $request->to);
         }
@@ -232,7 +207,7 @@ class AdminController extends Controller
         $totalRevenue = $transactions->sum('total_harga');
 
         $pdf = Pdf::loadView('admin.report-pdf', compact('transactions', 'totalRevenue'));
+
         return $pdf->download('laporan-keuangan-platform.pdf');
     }
-
 }
