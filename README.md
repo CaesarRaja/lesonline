@@ -1,53 +1,200 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Platform Les Online
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Sistem pembelajaran berbasis web yang menghubungkan siswa dengan mentor profesional untuk sesi belajar personal.**
 
-## About Laravel
+## 🎯 Quick Start
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Prerequisites
+- PHP 8.3+
+- Composer
+- Node.js 16+
+- MySQL 8.0 / PostgreSQL 15 / SQLite
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+### Installation
 ```bash
-composer require laravel/boost --dev
+# Clone & setup
+git clone [repo-url]
+cd lesonline
+composer install
+npm install
 
-php artisan boost:install
+# Environment
+cp .env.example .env
+php artisan key:generate
+
+# Database
+php artisan migrate
+php artisan db:seed
+
+# Build & run
+npm run build
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Visit: **http://localhost:8000**
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 📋 Stack
 
-## Code of Conduct
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Laravel 13.8 (PHP 8.3) |
+| **Frontend** | Tailwind CSS v3.4 + Vite |
+| **Database** | MySQL 8 / PostgreSQL 15 / SQLite |
+| **Real-time** | Laravel Reverb v1.10 + WebSocket |
+| **Auth** | Laravel Breeze v2.4 (Multi-role) |
+| **Payment** | Midtrans API v2.6 |
+| **PDF** | barryvdh/laravel-dompdf v3.1 |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
+
+## ✨ Core Features
+
+- **Multi-role Authentication** - Student, Mentor, Admin roles
+- **Mentor Management** - Profile, keahlian, tarif per jam
+- **Schedule Booking** - Jadwal fleksibel dengan real-time availability
+- **Payment Integration** - Secure checkout dengan Midtrans Snap
+- **Real-time Chat** - WebSocket-based messaging
+- **Rating & Reviews** - Post-session feedback system
+- **Withdrawal System** - Mentor earnings management
+- **Responsive Design** - Mobile-first UI/UX
+
+---
+
+## 🚀 Development
+
+### Run Full Dev Stack
+```bash
+npm run dev
+```
+
+**Includes**: Laravel server, Queue worker, Log monitoring, Vite HMR
+
+### Individual Processes
+```bash
+# API Server
+php artisan serve
+
+# WebSocket Server
+php artisan reverb:start
+
+# Queue Worker
+php artisan queue:listen
+
+# Frontend Build
+npm run dev
+```
+
+---
+
+## 📚 Database
+
+**10 Core Tables**: users, mentors, schedules, transactions, reviews, mentor_favorites, withdrawals, messages, broadcasts, platform_fees
+
+See: [SPESIFIKASI_SISTEM_AKTUAL.md](./Dokumen/SPESIFIKASI_SISTEM_AKTUAL.md) for full ERD & schema
+
+---
+
+## 🧪 Testing
+
+```bash
+npm run test
+```
+
+---
+
+## 📖 Full Documentation
+
+- **Installation Guide** → [README_LAPORAN.md](./README_LAPORAN.md)
+- **Database Schema** → [Dokumen/SPESIFIKASI_SISTEM_AKTUAL.md](./Dokumen/SPESIFIKASI_SISTEM_AKTUAL.md)
+- **Product Spec** → [Dokumen/PRD.md](./Dokumen/PRD.md)
+- **Design Guide** → [Dokumen/design.md](./Dokumen/design.md)
+
+---
+
+## 🛠️ Useful Commands
+
+```bash
+# Database
+php artisan migrate              # Run migrations
+php artisan migrate:fresh        # Reset DB
+php artisan db:seed              # Seed data
+php artisan tinker               # Interactive shell
+
+# Cache & Config
+php artisan cache:clear
+php artisan config:cache
+
+# Asset Build
+npm run build                     # Production build
+npm run dev                       # Development with HMR
+```
+
+---
+
+## 📦 Project Structure
+
+```
+lesonline/
+├── app/Models/                  # Eloquent models
+├── app/Http/Controllers/        # Route handlers
+├── database/migrations/         # DB schema
+├── resources/views/             # Blade templates
+├── resources/js/                # JavaScript
+├── resources/css/               # Tailwind CSS
+├── routes/                      # Route definitions
+├── Dokumen/                     # Project documentation
+└── tests/                       # Test suite
+```
+
+---
+
+## 🔑 API Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/mentors` | GET | List mentors |
+| `/api/schedules` | GET | Available schedules |
+| `/api/transactions` | POST | Create booking |
+| `/api/reviews` | POST | Submit review |
+| `/api/messages` | WS | Real-time chat |
+
+---
+
+## 🚨 Troubleshooting
+
+**Database connection error?**
+```bash
+php artisan config:clear
+# Update .env with correct credentials
+php artisan migrate
+```
+
+**Midtrans not working?**
+- Verify MIDTRANS_SERVER_KEY & CLIENT_KEY in .env
+- Check sandbox mode: `MIDTRANS_IS_PRODUCTION=false`
+
+**WebSocket issues?**
+```bash
+php artisan reverb:start
+```
+
+---
+
+## 📝 License
+
+MIT License - See LICENSE file
+
+---
+
+## 👥 Contributors
+
+Team: [List team members here]
+
+---
+
+**Last Updated**: 2026-06-23 | **Status**: Active Development
 
 ## Security Vulnerabilities
 

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Les Online - Mentor Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#6f5100",
+                      "error-container": "#ffdad6",
+                      "tertiary-container": "#bc4800",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface-variant": "#434655",
+                      "inverse-surface": "#2e3039",
+                      "inverse-primary": "#b4c5ff",
+                      "tertiary-fixed": "#ffdbcd",
+                      "secondary": "#795900",
+                      "on-error-container": "#93000a",
+                      "surface": "#faf8ff",
+                      "primary": "#004ac6",
+                      "text-main": "#0f172a",
+                      "primary-container": "#2563eb",
+                      "on-secondary-fixed": "#261a00",
+                      "inverse-on-surface": "#f0f0fb",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-fixed-dim": "#ffb596",
+                      "on-surface": "#191b23",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed-variant": "#5c4300",
+                      "background": "#faf8ff",
+                      "outline-variant": "#c3c6d7",
+                      "on-primary-fixed": "#00174b",
+                      "on-background": "#191b23",
+                      "surface-variant": "#e1e2ed",
+                      "tertiary": "#943700",
+                      "secondary-container": "#ffc329",
+                      "on-tertiary-fixed-variant": "#7d2d00",
+                      "pending-text": "#b45309",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "on-primary": "#ffffff",
+                      "surface-bright": "#faf8ff",
+                      "surface-dim": "#d9d9e5",
+                      "on-error": "#ffffff",
+                      "bg-base": "#f9fafb",
+                      "success-text": "#047857",
+                      "text-muted": "#6b7280",
+                      "on-tertiary-fixed": "#360f00",
+                      "error": "#ba1a1a",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "surface-tint": "#0053db",
+                      "primary-fixed": "#dbe1ff",
+                      "success-bg": "#ecfdf5",
+                      "surface-container-highest": "#e1e2ed",
+                      "outline": "#737686",
+                      "pending-bg": "#fffbeb",
+                      "secondary-fixed": "#ffdf9f",
+                      "surface-container-low": "#f3f3fe",
+                      "surface-container": "#ededf9",
+                      "on-tertiary-container": "#ffede6",
+                      "surface-container-high": "#e7e7f3",
+                      "on-primary-container": "#eeefff",
+                      "secondary-fixed-dim": "#f9bd22"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sidebar-width": "16rem",
+                      "container-max": "80rem",
+                      "margin-desktop": "2rem",
+                      "gutter": "1.5rem",
+                      "margin-mobile": "1rem"
+              },
+              "fontFamily": {
+                      "headline-card": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-main": [
+                              "Inter"
+                      ],
+                      "display-logo": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "label-bold": [
+                              "Inter"
+                      ],
+                      "price-display": [
+                              "Plus Jakarta Sans"
+                      ]
+              },
+              "fontSize": {
+                      "headline-card": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-main": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-logo": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "letterSpacing": "-0.025em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-bold": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "price-display": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "900"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+</head>
+<body class="bg-bg-base text-text-main font-body-main text-body-main antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Dashboard Layout Wrapper -->
+<div class="flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden md:flex bg-surface-container flex-col h-full p-4 fixed left-0 w-sidebar-width border-r border-outline-variant z-20">
+<!-- Brand -->
+<div class="mb-8 px-4 flex items-center gap-3">
+<img class="w-8 h-8 rounded-lg object-cover" data-alt="A clean, modern geometric logo for an educational platform named 'Les Online'. The logo should feature a stylized open book or graduation cap integrated with a digital network icon. The color palette must use a crisp, professional corporate blue with subtle amber accents on a pristine white background. High resolution, minimalist vector style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbv9wAsS1zDUDDz3qAJ31n1VMyT-T2wRVc8fR7HQ0I9mZqw2if9p1RDwoASSmyjV-XTQRQbS1GZ7naK1knzP_IREUnh4wlKWBUU8gYseYV2aoia5jd0qBsr9cqgPm9cWGwErjeEXBBoPQDSsySRf_V92HxLgcKOu8jUpKKFTOLHUfDUiSXW6lYdC1Ul4zWo7_O8PS9AWPFdzj9MCg7kt-IoGgJXCG8gt1y4-X4jWed6FgDc_najSNil-2rUGyUCcDeInC62i_eRXUr"/>
+<div>
+<h1 class="font-display-logo text-display-logo text-primary">Les Online</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Student Portal</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg font-label-bold text-label-bold transition-all duration-200 active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">school</span>
+                    My Classes
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">payments</span>
+                    Payments
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">chat</span>
+                    Messages
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-bold text-label-bold transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</nav>
+<!-- CTA -->
+<div class="mt-auto mb-6 px-2">
+<button class="w-full bg-primary text-on-primary font-label-bold text-label-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 active:scale-95 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">add_circle</span>
+                     Book New Session
+                 </button>
+</div>
+<!-- Footer Links -->
+<div class="space-y-1 pt-4 border-t border-outline-variant">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-sm text-label-sm transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-size: 18px;">help</span>
+                    Help Center
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-sm text-label-sm transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
+                    Logout
+                </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-sidebar-width h-full overflow-y-auto overflow-x-hidden flex flex-col">
+<!-- Top Header -->
+<header class="sticky top-0 bg-surface/80 backdrop-blur-md z-10 border-b border-outline-variant px-margin-mobile md:px-margin-desktop py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<!-- Mobile Menu Button -->
+<button class="md:hidden p-2 text-on-surface-variant hover:bg-surface-variant rounded-full transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div>
+<h2 class="font-headline-card text-headline-card text-on-surface">Halo, Sarah Wijaya!</h2>
+<p class="font-label-sm text-label-sm text-text-muted hidden sm:block">Ready for today's sessions?</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<!-- Notification Bell -->
+<button class="relative p-2 text-on-surface-variant hover:bg-surface-variant rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-surface"></span>
+</button>
+<!-- Profile Avatar -->
+<button class="w-10 h-10 rounded-full border-2 border-primary-fixed overflow-hidden hover:shadow-md transition-shadow">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of an Asian female mentor named Sarah, wearing smart casual business attire. She has a warm, approachable smile and is positioned against a bright, modern office background with soft natural lighting and subtle blue and amber architectural accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlvaXqBwr10au0eHKH_9avADle-Vue5We_cmNAAJIDZKEknzYq_3dC0jNRkG07Rxxqzvl8owyJH3OIrPO_SXk76wgGmf2m-Xc2OfFL4llinS3Vcx2P-ZmDLkzkvpLdzeJQeZdKWsd4g5_LQR1kyGxr7_zcE5ZnigKwr4V0TGuZGSCMb6S8jNe7rXaZC3k6IYECBm3tcPxMmgmivOFoKvTl2I8nksU7DBPDHSzRfufbzhx3M73kMuUYaMIpAduvyAsmIfDguXlhR7y7"/>
+</button>
+</div>
+</header>
+<!-- Scrollable Canvas -->
+<div class="p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full space-y-gutter">
+<!-- Quick Actions (Top row for utility) -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div class="flex items-center gap-3 bg-surface-container-lowest p-2 rounded-xl border border-outline-variant shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant pl-2">Availability:</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-success-text"></div>
+<span class="ml-3 font-label-bold text-label-bold text-success-text">Online</span>
+</label>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 border border-primary text-primary hover:bg-surface-container rounded-lg font-label-bold text-label-bold transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">download</span>
+                         Export Report
+                     </button>
+</div>
+<!-- Statistics Overview (Bento Grid) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Earnings Card -->
+<div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+<span class="flex items-center gap-1 text-success-text font-label-sm text-label-sm bg-success-bg px-2 py-1 rounded-full">
+<span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+                                +12%
+                            </span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-text-muted mb-1">Total Earnings</p>
+<h3 class="font-price-display text-price-display text-on-surface">Rp 4.5M</h3>
+</div>
+</div>
+<!-- Active Students Card -->
+<div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined">group</span>
+</div>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-text-muted mb-1">Active Students</p>
+<h3 class="font-price-display text-price-display text-on-surface">12 Students</h3>
+</div>
+</div>
+<!-- Total Sessions Card -->
+<div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">calendar_month</span>
+</div>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-text-muted mb-1">Total Sessions</p>
+<h3 class="font-price-display text-price-display text-on-surface">48 Sessions</h3>
+</div>
+</div>
+</div>
+<!-- Main Content Split -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-gutter">
+<!-- Upcoming Schedule (Left Column - Takes more space) -->
+<div class="xl:col-span-2 space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="font-headline-card text-headline-card text-on-surface">Upcoming Schedule</h3>
+<a class="font-label-sm text-label-sm text-primary hover:underline" href="#">View All</a>
+</div>
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm overflow-hidden divide-y divide-surface-variant">
+<!-- Schedule Item 1 -->
+<div class="p-5 hover:bg-surface-bright transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-headline-card text-headline-card">
+                                        BS
+                                    </div>
+<div>
+<h4 class="font-label-bold text-label-bold text-on-surface">Budi Santoso</h4>
+<p class="font-body-main text-body-main text-text-muted">Physics - High School</p>
+</div>
+</div>
+<div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+<div class="text-right flex-shrink-0">
+<p class="font-label-bold text-label-bold text-primary">14:00</p>
+<p class="font-label-sm text-label-sm text-text-muted">Today</p>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-xl font-label-bold text-label-bold shadow-sm hover:shadow-md transition-all active:scale-95 whitespace-nowrap">
+                                        Mulai Kelas
+                                    </button>
+</div>
+</div>
+<!-- Schedule Item 2 -->
+<div class="p-5 hover:bg-surface-bright transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-headline-card text-headline-card">
+                                        AL
+                                    </div>
+<div>
+<h4 class="font-label-bold text-label-bold text-on-surface">Ani Lestari</h4>
+<p class="font-body-main text-body-main text-text-muted">Mathematics - Middle School</p>
+</div>
+</div>
+<div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+<div class="text-right flex-shrink-0">
+<p class="font-label-bold text-label-bold text-on-surface">16:30</p>
+<p class="font-label-sm text-label-sm text-text-muted">Today</p>
+</div>
+<button class="border border-outline text-on-surface-variant px-4 py-2 rounded-xl font-label-bold text-label-bold hover:bg-surface-variant transition-colors whitespace-nowrap">
+                                        Detail
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Bookings (Right Column) -->
+<div class="xl:col-span-1 space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="font-headline-card text-headline-card text-on-surface">Recent Bookings</h3>
+</div>
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+<ul class="divide-y divide-surface-variant">
+<!-- Booking Item 1 -->
+<li class="p-4 hover:bg-surface-bright transition-colors">
+<div class="flex justify-between items-center mb-2">
+<h4 class="font-label-bold text-label-bold text-on-surface">Chemistry 101</h4>
+<span class="px-2 py-1 bg-success-bg text-success-text rounded-md font-label-sm text-label-sm flex items-center gap-1">
+                                            Success
+                                        </span>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<p class="font-label-sm text-label-sm text-text-muted">Rizky P.</p>
+<p class="font-label-sm text-label-sm text-text-muted">Tomorrow, 10:00</p>
+</div>
+<p class="font-label-bold text-label-bold text-on-surface">Rp 150k</p>
+</div>
+</li>
+<!-- Booking Item 2 -->
+<li class="p-4 hover:bg-surface-bright transition-colors">
+<div class="flex justify-between items-center mb-2">
+<h4 class="font-label-bold text-label-bold text-on-surface">Biology Advanced</h4>
+<span class="px-2 py-1 bg-pending-bg text-pending-text rounded-md font-label-sm text-label-sm flex items-center gap-1">
+                                            Pending
+                                        </span>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<p class="font-label-sm text-label-sm text-text-muted">Dewi S.</p>
+<p class="font-label-sm text-label-sm text-text-muted">Friday, 15:00</p>
+</div>
+<p class="font-label-bold text-label-bold text-on-surface">Rp 200k</p>
+</div>
+</li>
+<!-- Booking Item 3 -->
+<li class="p-4 hover:bg-surface-bright transition-colors opacity-75">
+<div class="flex justify-between items-center mb-2">
+<h4 class="font-label-bold text-label-bold text-on-surface line-through">Basic Math</h4>
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant rounded-md font-label-sm text-label-sm flex items-center gap-1">
+                                            Cancelled
+                                        </span>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<p class="font-label-sm text-label-sm text-text-muted">Tono B.</p>
+<p class="font-label-sm text-label-sm text-text-muted">Yesterday</p>
+</div>
+<p class="font-label-bold text-label-bold text-on-surface line-through text-text-muted">Rp 100k</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

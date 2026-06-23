@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\Transaction;
+use App\Models\User;
+
+class TransactionPolicy
+{
+    public function view(User $user, Transaction $transaction): bool
+    {
+        return $user->id === $transaction->student_id;
+    }
+
+    public function cancel(User $user, Transaction $transaction): bool
+    {
+        return $user->id === $transaction->student_id;
+    }
+
+    public function reschedule(User $user, Transaction $transaction): bool
+    {
+        return $user->id === $transaction->student_id;
+    }
+
+    public function pay(User $user, Transaction $transaction): bool
+    {
+        return $user->id === $transaction->student_id;
+    }
+}
