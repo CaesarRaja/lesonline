@@ -1,58 +1,181 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Les Online — Real-Time Mentor Discovery, Booking & Admin Control Center
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Identitas Kelompok
+- **Mata Kuliah** : Kewirausahaan (E-Business)
+- **Dosen Pengampu** : Abdul Yamin, S.Pd., M.Kom
+- **Kelas** : IF 4A
 
-## About Laravel
+### Anggota Kelompok
+| No | Nama | NIM | Peran |
+|----|------|-----|-------|
+| 1  | M. Yawad Arrahman | 2924007 | Project Manager |
+| 2  | Mart Kellin | 2924017 | Analisis Sistem |
+| 3  | Caesar Raja Yusri | 2924034 | Programmer |
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Deskripsi Proyek
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**BimbelEdu** adalah platform e-business berbasis web yang mempertemukan siswa dan mentor/tutor secara daring. Platform ini hadir untuk menjawab permasalahan keterbatasan akses pendidikan berkualitas, ketidakfleksibelan jadwal, dan sulitnya verifikasi kredibilitas tutor pada sistem les konvensional.
 
-## Learning Laravel
+Inovasi utama platform ini adalah **Real-Time Slot Synchronization** menggunakan Laravel Reverb (WebSocket), di mana saat seorang siswa berhasil melakukan booking dan menyelesaikan pembayaran, slot jadwal mentor secara otomatis ditandai penuh (*disabled*) di layar seluruh pengguna aktif secara instan — tanpa perlu *page refresh*.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**Target Pengguna:** Siswa yang ingin mencari mentor berkualitas, Mentor/Tutor yang ingin mengelola jadwal dan mendapatkan siswa lebih luas, serta Admin platform.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Teknologi yang Digunakan
 
-## Agentic Development
+### Frontend
+- Blade Templating Engine (Laravel)
+- Tailwind CSS v3.4+ (Google Stitch Style Design)
+- Laravel Echo + Pusher JS Client (real-time UI)
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Backend
+- Laravel 13 (arsitektur MVC)
+- Laravel Reverb v1.x (WebSocket Server)
+- Laravel Breeze (Autentikasi Multi-Role)
+- laravel-dompdf `barryvdh/laravel-dompdf` (Generator PDF)
 
-```bash
-composer require laravel/boost --dev
+### Database
+- MySQL 8.0 / PostgreSQL 15
 
-php artisan boost:install
-```
+### CMS (jika digunakan)
+- Tidak menggunakan CMS
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Layanan Pihak Ketiga
+- **Payment Gateway** : Midtrans API (mode Sandbox)
+- **Cek Ongkir** : -
+- **Hosting** : Belum dideploy (lingkungan lokal/localhost)
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Fitur yang Diimplementasikan
 
-## Code of Conduct
+### Fitur Wajib
+- [x] Login & Register (Multi Role: Student, Mentor, Admin)
+- [x] Manajemen Data (CRUD multi-tabel: Mentor, Jadwal, Materi, Ulasan, Penarikan Saldo)
+- [x] Transaksi (keranjang, checkout via Midtrans Snap, riwayat transaksi)
+- [x] Dashboard Informatif (grafik & statistik per role)
+- [x] Laporan (PDF — laporan transaksi)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Fitur Bonus
+- [x] Payment Gateway (Midtrans Snap — mode Sandbox)
+- [ ] Cek Ongkos Kirim
+- [x] Desain UI/UX Responsif
+- [ ] Deploy Online
+- [x] Real-Time Slot Availability via WebSocket (Laravel Reverb)
+- [x] Live Chat antar pengguna
+- [x] Sistem Ulasan & Rating Mentor
+- [x] Manajemen Penarikan Saldo (Withdrawal) untuk Mentor
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Panduan Instalasi
 
-## License
+### Prasyarat
+- PHP 8.2+
+- Composer
+- Node.js & NPM
+- MySQL 8.0 atau PostgreSQL 15
+- XAMPP / Laragon (opsional, untuk lingkungan lokal)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Langkah Instalasi
+
+1. **Clone repositori**
+   ```bash
+   git clone https://github.com/CaesarRaja/lesonline.git
+   cd lesonline
+   ```
+
+2. **Install dependencies PHP**
+   ```bash
+   composer install
+   ```
+
+3. **Install dependencies JavaScript**
+   ```bash
+   npm install
+   ```
+
+4. **Konfigurasi environment**
+   - Salin `.env.example` menjadi `.env`
+   ```bash
+   cp .env.example .env
+   ```
+   - Sesuaikan konfigurasi database dan kunci Midtrans di file `.env`:
+   ```env
+   DB_DATABASE=lesonline
+   DB_USERNAME=root
+   DB_PASSWORD=
+
+   MIDTRANS_SERVER_KEY=your_server_key
+   MIDTRANS_CLIENT_KEY=your_client_key
+   ```
+
+5. **Generate application key**
+   ```bash
+   php artisan key:generate
+   ```
+
+6. **Migrasi & Seed database**
+   ```bash
+   php artisan migrate --seed
+   ```
+
+7. **Jalankan server WebSocket (Laravel Reverb)**
+   ```bash
+   php artisan reverb:start
+   ```
+
+8. **Jalankan asset bundler (Vite)**
+   ```bash
+   npm run dev
+   ```
+
+9. **Jalankan server Laravel**
+   ```bash
+   php artisan serve
+   ```
+
+10. Buka di browser: `http://localhost:8000`
+
+---
+
+## Akun Demo
+
+| Role    | Email                      | Password   |
+|---------|----------------------------|------------|
+| Admin   | admin@bimbeledu.com        | password   |
+| Student | student@bimbeledu.com      | password   |
+| Mentor  | mentor@bimbeledu.com       | password   |
+| Mentor  | mentor2@bimbeledu.com      | password   |
+| Mentor  | mentor3@bimbeledu.com      | password   |
+
+---
+
+## Tampilan Aplikasi (Screenshot)
+
+*Screenshot akan ditambahkan.*
+
+---
+
+## Video Demo
+
+*Link video demonstrasi akan ditambahkan.*
+
+---
+
+## Link Repository
+
+- GitHub: [https://github.com/CaesarRaja/lesonline](https://github.com/CaesarRaja/lesonline)
+
+---
+
+## Catatan Tambahan
+
+- Integrasi Midtrans menggunakan **mode Sandbox** (simulasi), belum menggunakan mode Production.
+- Sesi mentoring dilaksanakan melalui platform video conference eksternal (Google Meet / Zoom). Tautan sesi dibagikan oleh mentor melalui fitur booking/informasi jadwal.
+- Laporan PDF dibangkitkan menggunakan library `barryvdh/laravel-dompdf`.
+- Platform dikembangkan dan diuji dalam lingkungan lokal menggunakan server development Laravel; belum dideploy ke lingkungan produksi cloud.
+- Untuk menjalankan fitur real-time, pastikan server **Laravel Reverb** (`php artisan reverb:start`) berjalan bersamaan dengan `php artisan serve` dan `npm run dev`.
